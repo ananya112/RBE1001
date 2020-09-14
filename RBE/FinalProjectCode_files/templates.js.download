@@ -1,0 +1,845 @@
+(function() {
+  var template = Handlebars.template, templates = Handlebars.templates = Handlebars.templates || {};
+templates['availablecourses'] = template({"1":function(container,depth0,helpers,partials,data) {
+    var alias1=container.lambda, alias2=container.escapeExpression;
+
+  return "<option value=\""
+    + alias2(alias1((depth0 != null ? depth0.id : depth0), depth0))
+    + "\">"
+    + alias2(alias1((depth0 != null ? depth0.name : depth0), depth0))
+    + "</option>\n";
+},"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
+    var stack1;
+
+  return ((stack1 = helpers.each.call(depth0 != null ? depth0 : (container.nullContext || {}),(depth0 != null ? depth0.courses : depth0),{"name":"each","hash":{},"fn":container.program(1, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":1,"column":0},"end":{"line":3,"column":9}}})) != null ? stack1 : "");
+},"useData":true});
+templates['classroom'] = template({"1":function(container,depth0,helpers,partials,data) {
+    var alias1=container.lambda, alias2=container.escapeExpression;
+
+  return "<option value=\""
+    + alias2(alias1((depth0 != null ? depth0.id : depth0), depth0))
+    + "\">"
+    + alias2(alias1((depth0 != null ? depth0.name : depth0), depth0))
+    + " ("
+    + alias2(alias1((depth0 != null ? depth0.school : depth0), depth0))
+    + ")</option>\n";
+},"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
+    var stack1;
+
+  return ((stack1 = helpers.each.call(depth0 != null ? depth0 : (container.nullContext || {}),(depth0 != null ? depth0.classrooms : depth0),{"name":"each","hash":{},"fn":container.program(1, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":1,"column":0},"end":{"line":3,"column":9}}})) != null ? stack1 : "");
+},"useData":true});
+templates['editProjectDialog'] = template({"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
+    var stack1, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=container.hooks.helperMissing;
+
+  return "<div id=\"editProjectDialogForm\" class=\"lightbox\">\n    <div class=\"close\"></div>\n    <h2 class=\"dialogTitle\">"
+    + ((stack1 = (helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.RENAME_PROJECT",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":3,"column":28},"end":{"line":3,"column":59}}})) != null ? stack1 : "")
+    + "</h2>\n    <ul class=\"form-list\">\n        <li>\n            <label for=\"name\" class=\"required\">"
+    + ((stack1 = (helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.PROJECT_NAME_C",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":6,"column":47},"end":{"line":6,"column":78}}})) != null ? stack1 : "")
+    + "</label>\n            <p id=\"edit-name-error\" style=\"display: none; clear: both; color: red;\"></p>\n            <div class=\"input-box\"><input type=\"text\" name=\"name\" class=\"input-text required-entry name\"></input></div>\n            </li>\n        <li id=\"editProjectFolder\">\n            <label for=\"folder\" class=\"required\">"
+    + ((stack1 = (helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.IN_FOLDER_C",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":11,"column":49},"end":{"line":11,"column":77}}})) != null ? stack1 : "")
+    + "</label>\n            <div class=\"input-box\"><select name=\"folder\" id=\"editProjectSelectFolder\"></select></div>\n            </li>\n        <li>\n            <button id=\"bCopyToLocal\" type=\"button\" class=\"button\" style=\"display:none;\"><span><span>\n                "
+    + ((stack1 = (helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.COPY_TO_LOCAL_PROJECTS",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":16,"column":16},"end":{"line":16,"column":55}}})) != null ? stack1 : "")
+    + "\n            </span></span></button>\n            <button id=\"bCopyToRemote\" type=\"button\" class=\"button\" style=\"display:none;\"><span><span>\n                "
+    + ((stack1 = (helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.COPY_TO_MY_PROJECTS",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":19,"column":16},"end":{"line":19,"column":52}}})) != null ? stack1 : "")
+    + "\n            </span></span></button>\n        </li>\n    </ul>\n    <button id=\"bRenameProjectSubmit\" type=\"button right\" class=\"button\"><span>\n        <span>"
+    + ((stack1 = (helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.OK",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":24,"column":14},"end":{"line":24,"column":33}}})) != null ? stack1 : "")
+    + "</span></span></button>\n</div>";
+},"useData":true});
+templates['editor-ace'] = template({"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
+    return "<div id=\"editor\" style=\"display:none;\"></div>\n<div class=\"aceZoom\" style=\"display:none;\">\n    <img class=\"bZoom bZoomReset\" src=\"/studio/static/skin/frontend/base/default/images/RobotMesh/ZoomReset.png\"></img>\n    <br/>\n    <img class=\"bZoom bZoomIn\" src=\"/studio/static/skin/frontend/base/default/images/RobotMesh/ZoomIn.png\"></img>\n    <br/>\n    <img class=\"bZoom bZoomOut\" src=\"/studio/static/skin/frontend/base/default/images/RobotMesh/ZoomOut.png\"></img>\n    <br/>\n</div>";
+},"useData":true});
+templates['editor-blockly'] = template({"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
+    return "<div id=\"blocklySizingArea\" style=\"display: none; width:100%; height:100%;\">\n    <!-- Blockly is a floating overlay above this -->\n</div>";
+},"useData":true});
+templates['editor-flowol'] = template({"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
+    var alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=container.hooks.helperMissing, alias3=container.escapeExpression;
+
+  return "<div id=\"flowol\" style=\"display: none; width:100%; height:100%;\">\n    <div id=\"flowolSymbolToolbar\" class=\"ui-widget-header\">\n    <input type=\"radio\" id=\"tbModeText\" name=\"mode\" />\n    <label for=\"tbModeText\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.TEXT",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":4,"column":28},"end":{"line":4,"column":47}}}))
+    + "</label>\n    <input type=\"radio\" id=\"tbModeEdit\" name=\"mode\" />\n    <label for=\"tbModeEdit\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.EDIT",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":6,"column":28},"end":{"line":6,"column":47}}}))
+    + "</label>\n    <input type=\"radio\" id=\"tbModeLine\" name=\"mode\" />\n    <label for=\"tbModeLine\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.LINE",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":8,"column":28},"end":{"line":8,"column":47}}}))
+    + "</label>\n    </div>\n    <div id=\"flowchart-main\" class=\"noselect\">\n    <div id=\"flowchart-scroll\" style=\"position: relative;\">\n        <canvas id=\"flowchart\" width=\"3000\" height=\"3000\"\n                style=\"position: absolute; left: 0; top: 0; z-index: auto; \"></canvas>\n        <canvas id=\"flowchart-ghost\" width=\"3000\" height=\"3000\"\n                style=\"position: absolute; left: 0; top: 0; z-index: auto;\"></canvas>\n    </div>\n    <div class=\"flowolZoom\">\n        <img class=\"bZoom bZoomReset\" src=\"/studio/static/skin/frontend/base/default/images/RobotMesh/ZoomReset.png\"></img>\n        <br/>\n        <img class=\"bZoom bZoomIn\" src=\"/studio/static/skin/frontend/base/default/images/RobotMesh/ZoomIn.png\"></img>\n        <br/>\n        <img class=\"bZoom bZoomOut\" src=\"/studio/static/skin/frontend/base/default/images/RobotMesh/ZoomOut.png\"></img>\n        <br/>\n    </div>\n    </div>\n</div>";
+},"useData":true});
+templates['editor-joywiz'] = template({"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
+    var alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=container.hooks.helperMissing, alias3=container.escapeExpression;
+
+  return "<div id=\"joystick_wizard\" style=\"display: none; overflow-y: auto;\">\n    <!--<h3>"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.JOYSTICK_WIZARD",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":2,"column":12},"end":{"line":2,"column":42}}}))
+    + "</h3>-->\n    <table id=\"joywiz_table\">\n        <tr> <!-- for alignment -->\n            <td>\n                <img id=\"imgJoystickButtons\" src=\"\" width=\"369\"/>\n            </td>\n            <td>\n                <div>\n                    "
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.AXIS_DEADBAND_C",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":10,"column":20},"end":{"line":10,"column":50}}}))
+    + "\n                    <input class=\"deadband\" type=\"text\"\n                            value=\"0\" autocomplete=\"off\">\n                    </input>\n                </div>\n                <table id=\"joywiz_widgets\">\n                    <!-- widget template -->\n                    <tr class=\"joywiz_widget\">\n                        <td class=\"num\">1</td>\n                        <td>\n                            <!-- TODO: add multiple rows -->\n                            <span class=\"joywiz_action\">\n                                <select class=\"action_type\">\n                                </select>\n                                <span class=\"action_config linear_control\">\n                                    "
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.MOTOR_C",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":25,"column":36},"end":{"line":25,"column":58}}}))
+    + "\n                                    <select class=\"motor\">\n                                    </select>\n                                </span>\n                                <span class=\"action_config arcade_drive\">\n                                    "
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.LEFT_MOTOR_C",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":30,"column":36},"end":{"line":30,"column":63}}}))
+    + "\n                                    <select class=\"motor_left\">\n                                    </select>\n                                    "
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.RIGHT_MOTOR_C",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":33,"column":36},"end":{"line":33,"column":64}}}))
+    + "\n                                    <select class=\"motor_right\">\n                                    </select>\n                                </span>\n                                <span class=\"action_config set_while_pressed\">\n                                    "
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.MOTOR_C",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":38,"column":36},"end":{"line":38,"column":58}}}))
+    + "\n                                    <select class=\"motor_target\">\n                                    </select>\n                                    "
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.POWER_C",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":41,"column":36},"end":{"line":41,"column":58}}}))
+    + "\n                                    <input class=\"motor_power\" type=\"text\" value=\"100\" placeholder=\"i18n:msg.VALUE\" autocomplete=\"off\" />%\n                                </span>\n                                <span class=\"action_config motor_limit\">\n                                    <span class=\"ultra_distance_area\">\n                                        "
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.DISTANCE_C",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":46,"column":40},"end":{"line":46,"column":65}}}))
+    + "\n                                        <input class=\"ultra_distance\" type=\"text\" value=\"10\" placeholder=\"i18n:msg.VALUE\" autocomplete=\"off\" />\n                                    </span>\n                                    "
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.MOTOR_C",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":49,"column":36},"end":{"line":49,"column":58}}}))
+    + "\n                                    <select class=\"motor\">\n                                    </select>\n                                </span>\n                                <button class=\"lightButton bRemoveAction button\">X</button>\n                                <br/>\n                            </span><button class=\"lightButton bAddAction\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.ADD_ACTION",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":55,"column":74},"end":{"line":55,"column":99}}}))
+    + "</button>\n                            <br/>\n                        </td>\n                    </tr>\n                </table>\n                <br/>\n            </td>\n        </tr>\n    </table>\n</div>\n";
+},"useData":true});
+templates['editorToolbar'] = template({"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
+    var alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=container.hooks.helperMissing, alias3=container.escapeExpression;
+
+  return "<button id=\"tbCut\" title=\""
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.TT_CUT_CTRL_X",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":1,"column":26},"end":{"line":1,"column":54}}}))
+    + "\">\n	"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.CUT",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":2,"column":1},"end":{"line":2,"column":19}}}))
+    + "\n</button>\n<button id=\"tbCopy\" title=\""
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.TT_COPY_CTRL_C",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":4,"column":27},"end":{"line":4,"column":56}}}))
+    + "\">\n	"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.COPY",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":5,"column":1},"end":{"line":5,"column":20}}}))
+    + "\n</button>\n<button id=\"tbPaste\" title=\""
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.TT_PASTE_CTRL_V",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":7,"column":28},"end":{"line":7,"column":58}}}))
+    + "\">\n	"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.PASTE",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":8,"column":1},"end":{"line":8,"column":21}}}))
+    + "\n</button>\n<button id=\"tbDelete\" title=\""
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.TT_DELETE_DEL",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":10,"column":29},"end":{"line":10,"column":57}}}))
+    + "\">\n	"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.DELETE",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":11,"column":1},"end":{"line":11,"column":22}}}))
+    + "\n</button>\n\n<button id=\"tbUndo\" title=\""
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.TT_UNDO_CTRL_Z",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":14,"column":27},"end":{"line":14,"column":56}}}))
+    + "\">\n	"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.UNDO",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":15,"column":1},"end":{"line":15,"column":20}}}))
+    + "\n</button>\n<button id=\"tbRedo\" title=\""
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.TT_REDO_CTRL_Y",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":17,"column":27},"end":{"line":17,"column":56}}}))
+    + "\">\n	"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.REDO",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":18,"column":1},"end":{"line":18,"column":20}}}))
+    + "\n</button>\n\n<button id=\"tbBreakpoint\" title=\""
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.TT_ADD_REMOVE_BREAKPOINT_FROM_CURRENT_SYMBOL",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":21,"column":33},"end":{"line":21,"column":92}}}))
+    + "\">\n	"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.ADD_BREAKPOINT",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":22,"column":1},"end":{"line":22,"column":30}}}))
+    + "\n</button>\n\n<!-- ace buttons -->\n<button id=\"tbFind\" title=\""
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.TT_FIND_TEXT_CTRL_F",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":26,"column":27},"end":{"line":26,"column":61}}}))
+    + "\">\n	"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.FIND",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":27,"column":1},"end":{"line":27,"column":20}}}))
+    + "\n</button>\n<button id=\"tbReplace\" title=\""
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.TT_REPLACE_TEXT_CTRL_H",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":29,"column":30},"end":{"line":29,"column":67}}}))
+    + "\">\n	"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.REPLACE",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":30,"column":1},"end":{"line":30,"column":23}}}))
+    + "\n</button>\n\n<button id=\"tbPrint\" title=\""
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.TT_PRINT_CODE",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":33,"column":28},"end":{"line":33,"column":56}}}))
+    + "\">\n	"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.PRINT",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":34,"column":1},"end":{"line":34,"column":21}}}))
+    + "\n</button>\n\n<button id=\"tbToggleComment\" title=\""
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.TT_TOGGLE_COMMENT_CTRL_SLASH",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":37,"column":36},"end":{"line":37,"column":79}}}))
+    + "\">#</button>\n<button id=\"tbIndent\"        title=\""
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.TT_INDENT_TAB",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":38,"column":36},"end":{"line":38,"column":64}}}))
+    + "\">x</button>\n<button id=\"tbOutdent\"       title=\""
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.TT_OUTDENT_SHIFT_TAB",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":39,"column":36},"end":{"line":39,"column":71}}}))
+    + "\">x</button>\n<button id=\"tbFold\"          title=\""
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.TT_TOGGLE_BLOCK_FOLDING_F2",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":40,"column":36},"end":{"line":40,"column":77}}}))
+    + "\">x</button>\n";
+},"useData":true});
+templates['helplink'] = template({"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
+    var helper;
+
+  return "<iframe id=\"apiDocsFrame\" src=\""
+    + container.escapeExpression(((helper = (helper = helpers.url || (depth0 != null ? depth0.url : depth0)) != null ? helper : container.hooks.helperMissing),(typeof helper === "function" ? helper.call(depth0 != null ? depth0 : (container.nullContext || {}),{"name":"url","hash":{},"data":data,"loc":{"start":{"line":1,"column":31},"end":{"line":1,"column":38}}}) : helper)))
+    + "\"></iframe>\n";
+},"useData":true});
+templates['login'] = template({"1":function(container,depth0,helpers,partials,data) {
+    var stack1, alias1=depth0 != null ? depth0 : (container.nullContext || {});
+
+  return "	<div id=\"projectUserName\">\n"
+    + ((stack1 = helpers["if"].call(alias1,(depth0 != null ? depth0.logged_in : depth0),{"name":"if","hash":{},"fn":container.program(2, data, 0),"inverse":container.program(4, data, 0),"data":data,"loc":{"start":{"line":3,"column":3},"end":{"line":7,"column":10}}})) != null ? stack1 : "")
+    + "	</div>\n	<div id=\"loginSectionLinks\">\n"
+    + ((stack1 = helpers["if"].call(alias1,(depth0 != null ? depth0.is_teacher : depth0),{"name":"if","hash":{},"fn":container.program(6, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":10,"column":3},"end":{"line":12,"column":10}}})) != null ? stack1 : "")
+    + "	  <a class=\"bRmcInstall\">"
+    + ((stack1 = (helpers.i18n||(depth0 && depth0.i18n)||container.hooks.helperMissing).call(alias1,"msg.install.INSTALL_RMC_PLUGIN",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":13,"column":26},"end":{"line":13,"column":69}}})) != null ? stack1 : "")
+    + "</a>\n	</div>\n	<ul class=\"links\">\n"
+    + ((stack1 = helpers["if"].call(alias1,(depth0 != null ? depth0.logged_in : depth0),{"name":"if","hash":{},"fn":container.program(8, data, 0),"inverse":container.program(10, data, 0),"data":data,"loc":{"start":{"line":16,"column":3},"end":{"line":21,"column":10}}})) != null ? stack1 : "")
+    + "	  <li class=\"last\"><img class=\"bSwitchLanguage\" src=\"/studio/static/skin/frontend/base/default/images/RobotMesh/language.png\" /></li>\n	</ul>\n";
+},"2":function(container,depth0,helpers,partials,data) {
+    var stack1;
+
+  return "		<p>"
+    + ((stack1 = (helpers.i18n||(depth0 && depth0.i18n)||container.hooks.helperMissing).call(depth0 != null ? depth0 : (container.nullContext || {}),"msg.F_LOGGED_IN_AS_0",(depth0 != null ? depth0.customer_name : depth0),{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":4,"column":5},"end":{"line":4,"column":52}}})) != null ? stack1 : "")
+    + "</p>\n";
+},"4":function(container,depth0,helpers,partials,data) {
+    var stack1;
+
+  return "		<p>"
+    + ((stack1 = (helpers.i18n||(depth0 && depth0.i18n)||container.hooks.helperMissing).call(depth0 != null ? depth0 : (container.nullContext || {}),"msg.LOG_IN_TO_SAVE_PROGRAMS",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":6,"column":5},"end":{"line":6,"column":45}}})) != null ? stack1 : "")
+    + "</p>\n";
+},"6":function(container,depth0,helpers,partials,data) {
+    var stack1;
+
+  return "		<a href=\"/studio/teacher/\" class=\"teacherLink\">"
+    + ((stack1 = (helpers.i18n||(depth0 && depth0.i18n)||container.hooks.helperMissing).call(depth0 != null ? depth0 : (container.nullContext || {}),"msg.TEACHER_PAGE",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":11,"column":49},"end":{"line":11,"column":78}}})) != null ? stack1 : "")
+    + "</a>\n";
+},"8":function(container,depth0,helpers,partials,data) {
+    var helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=container.hooks.helperMissing, alias3=container.escapeExpression;
+
+  return "		<li><a href=\""
+    + alias3(((helper = (helper = helpers.logout_url || (depth0 != null ? depth0.logout_url : depth0)) != null ? helper : alias2),(typeof helper === "function" ? helper.call(alias1,{"name":"logout_url","hash":{},"data":data,"loc":{"start":{"line":17,"column":15},"end":{"line":17,"column":29}}}) : helper)))
+    + "\" title=\""
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.LOG_OUT",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":17,"column":38},"end":{"line":17,"column":60}}}))
+    + "\" class=\"logoutLink\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.LOG_OUT",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":17,"column":81},"end":{"line":17,"column":103}}}))
+    + "</a></li>\n";
+},"10":function(container,depth0,helpers,partials,data) {
+    var helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=container.hooks.helperMissing, alias3="function", alias4=container.escapeExpression;
+
+  return "		<li><a href=\""
+    + alias4(((helper = (helper = helpers.login_url || (depth0 != null ? depth0.login_url : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"login_url","hash":{},"data":data,"loc":{"start":{"line":19,"column":15},"end":{"line":19,"column":28}}}) : helper)))
+    + "\" title=\""
+    + alias4((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.LOG_IN",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":19,"column":37},"end":{"line":19,"column":58}}}))
+    + "\" class=\"loginLink\">"
+    + alias4((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.LOG_IN",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":19,"column":78},"end":{"line":19,"column":99}}}))
+    + "</a></li>\n		<li><a href=\""
+    + alias4(((helper = (helper = helpers.signup_url || (depth0 != null ? depth0.signup_url : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"signup_url","hash":{},"data":data,"loc":{"start":{"line":20,"column":15},"end":{"line":20,"column":29}}}) : helper)))
+    + "\" title=\""
+    + alias4((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.SIGN_UP",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":20,"column":38},"end":{"line":20,"column":60}}}))
+    + "\" class=\"registerLink\">"
+    + alias4((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.SIGN_UP",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":20,"column":83},"end":{"line":20,"column":105}}}))
+    + "</a></li>\n";
+},"12":function(container,depth0,helpers,partials,data) {
+    return "	<ul>\n	  <li class=\"last\"><img class=\"bSwitchLanguage\" src=\"/studio/static/skin/frontend/base/default/images/RobotMesh/language.png\" /></li>\n	</ul>\n";
+},"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
+    var stack1;
+
+  return ((stack1 = helpers["if"].call(depth0 != null ? depth0 : (container.nullContext || {}),(depth0 != null ? depth0.can_login : depth0),{"name":"if","hash":{},"fn":container.program(1, data, 0),"inverse":container.program(12, data, 0),"data":data,"loc":{"start":{"line":1,"column":2},"end":{"line":28,"column":9}}})) != null ? stack1 : "");
+},"useData":true});
+templates['match-options'] = template({"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
+    var alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=container.hooks.helperMissing, alias3=container.escapeExpression;
+
+  return alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.MIMIC_3D_GRAPHICS_DETAIL_C",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":1,"column":0},"end":{"line":1,"column":41}}}))
+    + "\n<select id=\"selectMimicDetail\">\n  <option>"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.LOW",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":3,"column":10},"end":{"line":3,"column":28}}}))
+    + "</option>\n  <option>"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.MEDIUM",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":4,"column":10},"end":{"line":4,"column":31}}}))
+    + "</option>\n  <option>"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.HIGH",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":5,"column":10},"end":{"line":5,"column":29}}}))
+    + "</option>\n</select>\n";
+},"useData":true});
+templates['memberFoldersAndAssignments'] = template({"1":function(container,depth0,helpers,partials,data) {
+    var stack1;
+
+  return "	<option value=\"\">"
+    + ((stack1 = (helpers.i18n||(depth0 && depth0.i18n)||container.hooks.helperMissing).call(depth0 != null ? depth0 : (container.nullContext || {}),"msg.ASSIGNMENTS_OVERVIEW",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":2,"column":18},"end":{"line":2,"column":55}}})) != null ? stack1 : "")
+    + "</option>\n";
+},"3":function(container,depth0,helpers,partials,data) {
+    var stack1;
+
+  return "	<option value=\"\">"
+    + ((stack1 = (helpers.i18n||(depth0 && depth0.i18n)||container.hooks.helperMissing).call(depth0 != null ? depth0 : (container.nullContext || {}),"msg.ROOT_FOLDER",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":4,"column":18},"end":{"line":4,"column":46}}})) != null ? stack1 : "")
+    + "</option>\n";
+},"5":function(container,depth0,helpers,partials,data) {
+    var alias1=container.lambda, alias2=container.escapeExpression;
+
+  return "	<option value=\""
+    + alias2(alias1((depth0 != null ? depth0.id : depth0), depth0))
+    + "\">"
+    + alias2(alias1((depth0 != null ? depth0.name : depth0), depth0))
+    + "</option>\n";
+},"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
+    var stack1, alias1=depth0 != null ? depth0 : (container.nullContext || {});
+
+  return ((stack1 = helpers["if"].call(alias1,(depth0 != null ? depth0.assignment_mode : depth0),{"name":"if","hash":{},"fn":container.program(1, data, 0),"inverse":container.program(3, data, 0),"data":data,"loc":{"start":{"line":1,"column":2},"end":{"line":5,"column":9}}})) != null ? stack1 : "")
+    + ((stack1 = helpers.each.call(alias1,(depth0 != null ? depth0.folders : depth0),{"name":"each","hash":{},"fn":container.program(5, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":6,"column":2},"end":{"line":8,"column":11}}})) != null ? stack1 : "")
+    + ((stack1 = helpers.each.call(alias1,(depth0 != null ? depth0.assignments : depth0),{"name":"each","hash":{},"fn":container.program(5, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":9,"column":2},"end":{"line":11,"column":11}}})) != null ? stack1 : "");
+},"useData":true});
+templates['memberMissions'] = template({"1":function(container,depth0,helpers,partials,data,blockParams,depths) {
+    var stack1, alias1=container.lambda, alias2=container.escapeExpression, alias3=depth0 != null ? depth0 : (container.nullContext || {});
+
+  return "  <li id='project_"
+    + alias2(alias1((depth0 != null ? depth0.id : depth0), depth0))
+    + "'\n	data-folderid='"
+    + alias2(alias1((depth0 != null ? depth0.projectfolderId : depth0), depth0))
+    + "'\n	onclick='eh_navigate(\""
+    + alias2(alias1((depth0 != null ? depth0.id : depth0), depth0))
+    + "\")'>\n	<div class='projectImgDiv'>\n	  <a href='"
+    + alias2(alias1((depth0 != null ? depth0.url : depth0), depth0))
+    + "'>\n		<img src='"
+    + alias2(alias1((depth0 != null ? depth0.typeIconUrl : depth0), depth0))
+    + "' alt='"
+    + alias2(alias1((depth0 != null ? depth0.uiName : depth0), depth0))
+    + "' class='projectImg' />\n		"
+    + ((stack1 = helpers["if"].call(alias3,(depth0 != null ? depth0.overlayIconUrl : depth0),{"name":"if","hash":{},"fn":container.program(2, data, 0, blockParams, depths),"inverse":container.noop,"data":data,"loc":{"start":{"line":8,"column":2},"end":{"line":8,"column":121}}})) != null ? stack1 : "")
+    + "\n	  </a>\n	</div>\n	<div>\n	  <a href='"
+    + alias2(alias1((depth0 != null ? depth0.url : depth0), depth0))
+    + "' target='_blank'><span id='"
+    + ((stack1 = helpers["if"].call(alias3,(depths[1] != null ? depths[1].isLocal : depths[1]),{"name":"if","hash":{},"fn":container.program(4, data, 0, blockParams, depths),"inverse":container.noop,"data":data,"loc":{"start":{"line":12,"column":52},"end":{"line":12,"column":83}}})) != null ? stack1 : "")
+    + "project_name_"
+    + alias2(alias1((depth0 != null ? depth0.id : depth0), depth0))
+    + "' class='projectName name'>"
+    + alias2(alias1((depth0 != null ? depth0.uiName : depth0), depth0))
+    + "</span><br/>\n		  <span class='projectDescription'>"
+    + ((stack1 = helpers["if"].call(alias3,((stack1 = (depth0 != null ? depth0.arena_score : depth0)) != null ? stack1.success : stack1),{"name":"if","hash":{},"fn":container.program(6, data, 0, blockParams, depths),"inverse":container.program(8, data, 0, blockParams, depths),"data":data,"loc":{"start":{"line":13,"column":37},"end":{"line":13,"column":148}}})) != null ? stack1 : "")
+    + "</span></a>\n	</div>\n  </li>\n";
+},"2":function(container,depth0,helpers,partials,data) {
+    var alias1=container.lambda, alias2=container.escapeExpression;
+
+  return "<img src='"
+    + alias2(alias1((depth0 != null ? depth0.overlayIconUrl : depth0), depth0))
+    + "' alt='"
+    + alias2(alias1((depth0 != null ? depth0.uiName : depth0), depth0))
+    + "' class='projectImgOverlay' />";
+},"4":function(container,depth0,helpers,partials,data) {
+    return "local_";
+},"6":function(container,depth0,helpers,partials,data) {
+    var stack1;
+
+  return "Completed. High score: "
+    + container.escapeExpression(container.lambda(((stack1 = (depth0 != null ? depth0.arena_score : depth0)) != null ? stack1.high_score : stack1), depth0));
+},"8":function(container,depth0,helpers,partials,data) {
+    return "Incomplete";
+},"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data,blockParams,depths) {
+    var stack1;
+
+  return ((stack1 = helpers.each.call(depth0 != null ? depth0 : (container.nullContext || {}),(depth0 != null ? depth0.projects : depth0),{"name":"each","hash":{},"fn":container.program(1, data, 0, blockParams, depths),"inverse":container.noop,"data":data,"loc":{"start":{"line":1,"column":2},"end":{"line":16,"column":11}}})) != null ? stack1 : "");
+},"useData":true,"useDepths":true});
+templates['memberProjects'] = template({"1":function(container,depth0,helpers,partials,data,blockParams,depths) {
+    var stack1, alias1=container.lambda, alias2=container.escapeExpression, alias3=depth0 != null ? depth0 : (container.nullContext || {});
+
+  return "  <li id='project_"
+    + alias2(alias1((depth0 != null ? depth0.id : depth0), depth0))
+    + "'\n	data-folderid='"
+    + alias2(alias1((depth0 != null ? depth0.projectfolderId : depth0), depth0))
+    + "'\n	onclick='eh_navigate(\""
+    + alias2(alias1((depth0 != null ? depth0.id : depth0), depth0))
+    + "\")'>\n	<div class='projectImgDiv'>\n	  <a href='"
+    + alias2(alias1((depth0 != null ? depth0.url : depth0), depth0))
+    + "'>\n		<img src='"
+    + alias2(alias1((depth0 != null ? depth0.typeIconUrl : depth0), depth0))
+    + "' alt='"
+    + alias2(alias1((depth0 != null ? depth0.uiName : depth0), depth0))
+    + "' class='projectImg' />\n		"
+    + ((stack1 = helpers["if"].call(alias3,(depth0 != null ? depth0.overlayIconUrl : depth0),{"name":"if","hash":{},"fn":container.program(2, data, 0, blockParams, depths),"inverse":container.noop,"data":data,"loc":{"start":{"line":8,"column":2},"end":{"line":8,"column":121}}})) != null ? stack1 : "")
+    + "\n	  </a>\n	</div>\n	<div>\n	  <a href='"
+    + alias2(alias1((depth0 != null ? depth0.url : depth0), depth0))
+    + "' target='_blank'><span id='"
+    + ((stack1 = helpers["if"].call(alias3,(depths[1] != null ? depths[1].isLocal : depths[1]),{"name":"if","hash":{},"fn":container.program(4, data, 0, blockParams, depths),"inverse":container.noop,"data":data,"loc":{"start":{"line":12,"column":52},"end":{"line":12,"column":83}}})) != null ? stack1 : "")
+    + "project_name_"
+    + alias2(alias1((depth0 != null ? depth0.id : depth0), depth0))
+    + "' class='projectName name'>"
+    + alias2(alias1((depth0 != null ? depth0.uiName : depth0), depth0))
+    + "</span><br/>\n		  <span class='projectDescription'>"
+    + alias2(alias1((depth0 != null ? depth0.description : depth0), depth0))
+    + "</span></a>\n	</div>\n\n"
+    + ((stack1 = helpers["if"].call(alias3,(depths[1] != null ? depths[1].canChange : depths[1]),{"name":"if","hash":{},"fn":container.program(6, data, 0, blockParams, depths),"inverse":container.noop,"data":data,"loc":{"start":{"line":16,"column":1},"end":{"line":19,"column":8}}})) != null ? stack1 : "")
+    + "  </li>\n";
+},"2":function(container,depth0,helpers,partials,data) {
+    var alias1=container.lambda, alias2=container.escapeExpression;
+
+  return "<img src='"
+    + alias2(alias1((depth0 != null ? depth0.overlayIconUrl : depth0), depth0))
+    + "' alt='"
+    + alias2(alias1((depth0 != null ? depth0.uiName : depth0), depth0))
+    + "' class='projectImgOverlay' />";
+},"4":function(container,depth0,helpers,partials,data) {
+    return "local_";
+},"6":function(container,depth0,helpers,partials,data) {
+    var alias1=container.lambda, alias2=container.escapeExpression;
+
+  return "	  <button class='button deleteicon' onclick='eh_start_cmn.deleteProject(\""
+    + alias2(alias1((depth0 != null ? depth0.id : depth0), depth0))
+    + "\", \"#project_name_"
+    + alias2(alias1((depth0 != null ? depth0.id : depth0), depth0))
+    + "\");'></button>\n	  <button class='button gearicon' onclick='eh_start_cmn.editProject(\""
+    + alias2(alias1((depth0 != null ? depth0.id : depth0), depth0))
+    + "\", \"#project_name_"
+    + alias2(alias1((depth0 != null ? depth0.id : depth0), depth0))
+    + "\");'></button>\n";
+},"8":function(container,depth0,helpers,partials,data) {
+    var helper;
+
+  return "	<p>"
+    + container.escapeExpression(((helper = (helper = helpers.noItemsMessage || (depth0 != null ? depth0.noItemsMessage : depth0)) != null ? helper : container.hooks.helperMissing),(typeof helper === "function" ? helper.call(depth0 != null ? depth0 : (container.nullContext || {}),{"name":"noItemsMessage","hash":{},"data":data,"loc":{"start":{"line":22,"column":4},"end":{"line":22,"column":22}}}) : helper)))
+    + "</p>\n";
+},"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data,blockParams,depths) {
+    var stack1;
+
+  return ((stack1 = helpers.each.call(depth0 != null ? depth0 : (container.nullContext || {}),(depth0 != null ? depth0.projects : depth0),{"name":"each","hash":{},"fn":container.program(1, data, 0, blockParams, depths),"inverse":container.program(8, data, 0, blockParams, depths),"data":data,"loc":{"start":{"line":1,"column":2},"end":{"line":23,"column":11}}})) != null ? stack1 : "");
+},"useData":true,"useDepths":true});
+templates['members'] = template({"1":function(container,depth0,helpers,partials,data,blockParams,depths) {
+    var stack1, alias1=container.lambda, alias2=container.escapeExpression, alias3=depth0 != null ? depth0 : (container.nullContext || {});
+
+  return "  <li id='member_"
+    + alias2(alias1((depth0 != null ? depth0.member_id : depth0), depth0))
+    + "'\n	  data-classroomid='"
+    + alias2(alias1((depth0 != null ? depth0.classroom_id : depth0), depth0))
+    + "'\n	  onclick='eh_teacher.selectMember(\""
+    + alias2(alias1((depth0 != null ? depth0.member_id : depth0), depth0))
+    + "\");'>\n	  <div>\n		  <img src='"
+    + alias2(alias1((depth0 != null ? depth0.teacher_icon_url : depth0), depth0))
+    + "' alt='"
+    + alias2(alias1((depth0 != null ? depth0.firstname : depth0), depth0))
+    + " "
+    + alias2(alias1((depth0 != null ? depth0.lastname : depth0), depth0))
+    + "' class='memberImg'\n			   onclick='eh_teacher.selectMember(\""
+    + alias2(alias1((depth0 != null ? depth0.member_id : depth0), depth0))
+    + "\");'/>\n	  </div>\n	  <div>\n		  <span id='name_member_"
+    + alias2(alias1((depth0 != null ? depth0.member_id : depth0), depth0))
+    + "' class='memberName name'>\n			"
+    + ((stack1 = helpers["if"].call(alias3,(depth0 != null ? depth0.newuser : depth0),{"name":"if","hash":{},"fn":container.program(2, data, 0, blockParams, depths),"inverse":container.noop,"data":data,"loc":{"start":{"line":11,"column":3},"end":{"line":11,"column":31}}})) != null ? stack1 : "")
+    + " "
+    + alias2(alias1((depth0 != null ? depth0.firstname : depth0), depth0))
+    + " "
+    + alias2(alias1((depth0 != null ? depth0.lastname : depth0), depth0))
+    + "\n		  </span><br/>\n		  <span class='memberDescription'>"
+    + alias2(alias1((depth0 != null ? depth0.username : depth0), depth0))
+    + "</span>\n	  </div>\n\n"
+    + ((stack1 = helpers.unless.call(alias3,(depth0 != null ? depth0.isCurrentUser : depth0),{"name":"unless","hash":{},"fn":container.program(4, data, 0, blockParams, depths),"inverse":container.noop,"data":data,"loc":{"start":{"line":16,"column":3},"end":{"line":23,"column":14}}})) != null ? stack1 : "")
+    + ((stack1 = helpers["if"].call(alias3,(depths[1] != null ? depths[1].is_future : depths[1]),{"name":"if","hash":{},"fn":container.program(6, data, 0, blockParams, depths),"inverse":container.noop,"data":data,"loc":{"start":{"line":24,"column":3},"end":{"line":28,"column":10}}})) != null ? stack1 : "")
+    + "  </li>\n";
+},"2":function(container,depth0,helpers,partials,data) {
+    return "*";
+},"4":function(container,depth0,helpers,partials,data) {
+    var alias1=container.lambda, alias2=container.escapeExpression;
+
+  return "	  <button class='button deleteicon' \n			  onclick='eh_teacher.deleteMember(\""
+    + alias2(alias1((depth0 != null ? depth0.member_id : depth0), depth0))
+    + "\"); event.cancelBubble = true;'>                \n	  </button>\n	  <button class='button gearicon' \n			  onclick='eh_teacher.editMember(\""
+    + alias2(alias1((depth0 != null ? depth0.member_id : depth0), depth0))
+    + "\"); event.cancelBubble = true;'>                \n	  </button>\n";
+},"6":function(container,depth0,helpers,partials,data) {
+    return "	  <button class='button othergearicon courseElement' \n			  onclick='eh_teacher.assignMember(\""
+    + container.escapeExpression(container.lambda((depth0 != null ? depth0.customer_id : depth0), depth0))
+    + "\"); event.cancelBubble = true;'>                \n	  </button>\n";
+},"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data,blockParams,depths) {
+    var stack1;
+
+  return ((stack1 = helpers.each.call(depth0 != null ? depth0 : (container.nullContext || {}),(depth0 != null ? depth0.members : depth0),{"name":"each","hash":{},"fn":container.program(1, data, 0, blockParams, depths),"inverse":container.noop,"data":data,"loc":{"start":{"line":1,"column":2},"end":{"line":30,"column":11}}})) != null ? stack1 : "");
+},"useData":true,"useDepths":true});
+templates['mimic-editor-2d'] = template({"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
+    return "  <div id=\"mimic2d-div\">\n	<canvas id=\"mimic2d\" width=\"400\" height=\"320\"\n			style=\"position: absolute; z-index: auto; background: white;\"></canvas>\n	<!-- no ghost drawing -->\n	<canvas id=\"mimic2d-ghost\" style=\"visibility: hidden;\"></canvas>\n  </div>\n";
+},"useData":true});
+templates['mimic-editor-3d'] = template({"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
+    return "  <div id=\"mimic3d-webgl_error\" style=\"display:none; background:orange;\">\n	<p>\n	  "
+    + container.escapeExpression((helpers.i18n||(depth0 && depth0.i18n)||container.hooks.helperMissing).call(depth0 != null ? depth0 : (container.nullContext || {}),"msg.mb.webgl_msg",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":3,"column":3},"end":{"line":3,"column":30}}}))
+    + "\n	</p>\n  </div>\n  <div id=\"mimic3d-div\">\n	<div id=\"flowol_3d_scene\" tabindex=\"1\"></div>\n  </div>\n";
+},"useData":true});
+templates['mimic-editor'] = template({"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
+    var stack1, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=container.hooks.helperMissing, alias3=container.escapeExpression, alias4=container.lambda;
+
+  return "  <div id=\"mimic-webgl_error\" style=\"display:none; background:orange;\">\n	<p>\n	  "
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.webgl_msg",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":3,"column":3},"end":{"line":3,"column":30}}}))
+    + "\n	</p>\n  </div>\n  <div id=\"mimic-editor\" style=\"display:none;\">\n	<!--<div id=\"delete-tooltip\">\n		<div class=\"button\">OK</div>"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb._delete",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":8,"column":30},"end":{"line":8,"column":55}}}))
+    + " ?\n	</div>-->\n	<!--<div id=\"flex-tools\">\n		<div class=\"title\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.flex",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":11,"column":21},"end":{"line":11,"column":43}}}))
+    + "</div>\n		<div id=\"flex-type\" class=\"transform-header\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.flex_control_point",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":12,"column":47},"end":{"line":12,"column":83}}}))
+    + ":</div>\n		<div class=\"box\">\n			<div class=\"input-wrapper\">X: <input type=\"text\" id=\"flex-x\" data-axis=\"x\" /></div>\n		</div>\n		<div class=\"box\">\n			<div class=\"input-wrapper\">Y: <input type=\"text\" id=\"flex-y\" data-axis=\"y\" /></div>\n		</div>\n		<div class=\"box last\">\n			<div class=\"input-wrapper\">Z: <input type=\"text\" id=\"flex-z\" data-axis=\"z\" /></div>\n		</div>\n		<div class=\"transform-header length\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.flex_length",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":22,"column":39},"end":{"line":22,"column":68}}}))
+    + ":</div>\n		<div class=\"box\">\n			<div class=\"input-wrapper\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.flex_length_initial",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":24,"column":30},"end":{"line":24,"column":67}}}))
+    + ": <div id=\"flex-init\" class=\"length-output\"></div></div>\n		</div>\n		<div class=\"box last\">\n			<div class=\"input-wrapper\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.flex_length_current",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":27,"column":30},"end":{"line":27,"column":67}}}))
+    + ": <div id=\"flex-curr\" class=\"length-output\"></div></div>\n		</div>\n		<div class=\"buttons\">\n			<div id=\"flex-subdivide\" class=\"button first\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.flex_subdivide",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":30,"column":49},"end":{"line":30,"column":81}}}))
+    + "</div>\n			<div id=\"flex-delete\" class=\"button\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.flex_delete",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":31,"column":40},"end":{"line":31,"column":69}}}))
+    + "</div>\n		</div>\n		<div id=\"flex-complete\" class=\"button\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.flex_complete",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":33,"column":41},"end":{"line":33,"column":72}}}))
+    + "</div>\n	</div>-->\n	<!--<header>\n		<nav>\n			<div class=\"logo-wrapper\">\n				<a href=\""
+    + alias3(alias4(((stack1 = (depth0 != null ? depth0.vars : depth0)) != null ? stack1.baseURL : stack1), depth0))
+    + "\" class=\"logo sprite\"></a>\n				<a href=\""
+    + alias3(alias4(((stack1 = (depth0 != null ? depth0.vars : depth0)) != null ? stack1.baseURL : stack1), depth0))
+    + "\" class=\"text\">robot<span class=\"blue\">mesh</span></a>\n			</div>\n			<ul class=\"left\">\n				<li id=\"menu-file\" data-type=\"file\">\n					<span>"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.file",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":43,"column":11},"end":{"line":43,"column":33}}}))
+    + "</span>\n					<div class=\"menu\">\n						<div id=\"menu-new\" class=\"item\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.menu_new",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":45,"column":38},"end":{"line":45,"column":64}}}))
+    + "</div>\n						<div id=\"menu-open\" class=\"item\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.menu_open",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":46,"column":39},"end":{"line":46,"column":66}}}))
+    + "</div>\n						<div id=\"menu-import\" class=\"item\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.menu_import",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":47,"column":41},"end":{"line":47,"column":70}}}))
+    + "</div>\n						<div id=\"menu-export\" class=\"item\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.menu_export",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":48,"column":41},"end":{"line":48,"column":70}}}))
+    + "</div>\n						<div id=\"menu-save\" class=\"item\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.menu_save",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":49,"column":39},"end":{"line":49,"column":66}}}))
+    + "</div>\n						<div id=\"menu-save-as\" class=\"item\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.menu_save_as",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":50,"column":42},"end":{"line":50,"column":72}}}))
+    + "</div>\n					</div>\n				</li>\n				<li id=\"menu-help\" data-type=\"help\">\n					<span>"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.help",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":54,"column":11},"end":{"line":54,"column":33}}}))
+    + "</span>\n					<div class=\"menu\">\n						<div class=\"item\">\n							<a href=\""
+    + alias3(alias4(((stack1 = (depth0 != null ? depth0.vars : depth0)) != null ? stack1.baseURL : stack1), depth0))
+    + "/usermanual\" target=_blank>"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.menu_user_manual",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":57,"column":59},"end":{"line":57,"column":93}}}))
+    + "</a>\n						</div>\n						<div class=\"item\">\n							<a href=\""
+    + alias3(alias4(((stack1 = (depth0 != null ? depth0.vars : depth0)) != null ? stack1.baseURL : stack1), depth0))
+    + "/tutorials\" target=_blank>"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.menu_tutorials",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":60,"column":58},"end":{"line":60,"column":90}}}))
+    + "</a>\n						</div>\n					</div>\n				</li>\n				<li><a href=\""
+    + alias3(alias4(((stack1 = (depth0 != null ? depth0.vars : depth0)) != null ? stack1.baseURL : stack1), depth0))
+    + "/menu1\">Menu 1</a></li>\n				<li><a href=\""
+    + alias3(alias4(((stack1 = (depth0 != null ? depth0.vars : depth0)) != null ? stack1.baseURL : stack1), depth0))
+    + "/menu2\">Menu 2</a></li>\n				<li><a href=\""
+    + alias3(alias4(((stack1 = (depth0 != null ? depth0.vars : depth0)) != null ? stack1.baseURL : stack1), depth0))
+    + "/menu3\">Menu 3</a></li>\n			</ul>\n		</nav>\n	</header>-->\n	<div id=\"params\">\n		<div id=\"stopwarning\" style=\"display:none;\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.MIMIC_STOP_WARNING",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":71,"column":46},"end":{"line":71,"column":79}}}))
+    + "</div>\n		<div id=\"tool-select\" class=\"item tool paramtool\" title=\""
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.tooltip_select",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":72,"column":59},"end":{"line":72,"column":91}}}))
+    + "\"></div>\n		<div id=\"tool-snap\" class=\"item tool paramtool\" title=\""
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.tooltip_snap",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":73,"column":57},"end":{"line":73,"column":87}}}))
+    + "\"></div>\n		<div id=\"tool-pivot\" class=\"item tool paramtool\" title=\""
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.tooltip_pivot",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":74,"column":58},"end":{"line":74,"column":89}}}))
+    + "\"></div>\n		<div class=\"separator paramtool\"></div>\n		<div id=\"tool-clone\" class=\"item tool paramtool\" title=\""
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.tooltip_clone",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":76,"column":58},"end":{"line":76,"column":89}}}))
+    + "\"></div>\n		<div id=\"tool-delete\" class=\"item tool paramtool\" title=\""
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.tooltip_delete",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":77,"column":59},"end":{"line":77,"column":91}}}))
+    + "\"></div>\n		<div class=\"separator paramtool\"></div>\n		<!--<div id=\"tool-flex\" class=\"item tool paramtool\" title=\""
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.tooltip_flex",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":79,"column":61},"end":{"line":79,"column":91}}}))
+    + "\"></div>\n			  <div class=\"separator paramtool\"></div>-->\n		<div id=\"tool-hide\" class=\"item tool paramtool\" title=\""
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.tooltip_hide",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":81,"column":57},"end":{"line":81,"column":87}}}))
+    + "\"></div>\n		<div id=\"tool-show\" class=\"item tool paramtool\" title=\""
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.tooltip_show",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":82,"column":57},"end":{"line":82,"column":87}}}))
+    + "\"></div>\n		<!--<div id=\"tool-printscreen\" class=\"item tool paramtool\" title=\""
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.tooltip_printscreen",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":83,"column":68},"end":{"line":83,"column":105}}}))
+    + "\"></div>-->\n		<div class=\"separator paramtool\"></div>\n\n		<div id=\"params-camera\" class=\"sprite paramtool\">\n			<div class=\"dummy\"></div>\n			<ul>\n				<li id=\"projection\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.toggle_projection",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":89,"column":24},"end":{"line":89,"column":59}}}))
+    + " <div class=\"shortcut\">Numpad 5</div></li>\n				<li id=\"orbit\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.toggle_orbit",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":90,"column":19},"end":{"line":90,"column":49}}}))
+    + " <div class=\"shortcut\">Numpad 9</div></li>\n				<li id=\"reset-camera\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.reset_camera",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":91,"column":26},"end":{"line":91,"column":56}}}))
+    + " <div class=\"shortcut\">Numpad 0</div></li>\n				<li class=\"separator\"></li>\n				<li id=\"orientation-left\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.left",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":93,"column":30},"end":{"line":93,"column":52}}}))
+    + " <div class=\"shortcut\">Ctrl Numpad 3</div></li>\n				<li id=\"orientation-right\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.right",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":94,"column":31},"end":{"line":94,"column":54}}}))
+    + " <div class=\"shortcut\">Numpad 3</div></li>\n				<li id=\"orientation-back\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.back",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":95,"column":30},"end":{"line":95,"column":52}}}))
+    + " <div class=\"shortcut\">Ctrl Numpad 1</div></li>\n				<li id=\"orientation-front\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.front",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":96,"column":31},"end":{"line":96,"column":54}}}))
+    + " <div class=\"shortcut\">Numpad 1</div></li>\n				<li id=\"orientation-bottom\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.bottom",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":97,"column":32},"end":{"line":97,"column":56}}}))
+    + " <div class=\"shortcut\">Ctrl Numpad 7</div></li>\n				<li id=\"orientation-top\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.top",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":98,"column":29},"end":{"line":98,"column":50}}}))
+    + " <div class=\"shortcut\">Numpad 7</div></li>\n			</ul>\n		</div>\n<!--                        <div id=\"param-gridHelper\" class=\"item active sprite paramtool\" title=\""
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.tooltip_grid_helper",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":101,"column":99},"end":{"line":101,"column":136}}}))
+    + "\"></div>-->\n		<div class=\"separator paramtool\"></div>\n		<div id=\"undo\" class=\"item sprite disabled paramtool\"  title=\""
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.tooltip_undo",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":103,"column":64},"end":{"line":103,"column":94}}}))
+    + "\"></div>\n		<div id=\"redo\" class=\"item sprite disabled paramtool\"  title=\""
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.tooltip_redo",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":104,"column":64},"end":{"line":104,"column":94}}}))
+    + "\"></div>\n		<div class=\"separator paramtool\"></div>\n		<div id=\"param-grid-small\" class=\"item sprite paramtool\" title=\""
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.tooltip_grid_small",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":106,"column":66},"end":{"line":106,"column":102}}}))
+    + "\"></div>\n		<div id=\"param-grid-medium\" class=\"item sprite paramtool\" title=\""
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.tooltip_grid_medium",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":107,"column":67},"end":{"line":107,"column":104}}}))
+    + "\"></div>\n		<div id=\"param-grid-large\" class=\"item sprite paramtool\" title=\""
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.tooltip_grid_large",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":108,"column":66},"end":{"line":108,"column":102}}}))
+    + "\"></div>\n		<div class=\"separator paramtool\"></div>\n		<div id=\"param-rendering-shaded\" class=\"item paramtool\" title=\""
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.tooltip_shaded",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":110,"column":65},"end":{"line":110,"column":97}}}))
+    + "\"></div>\n		<div id=\"param-rendering-shadedWithEdges\" class=\"item paramtool\" title=\""
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.tooltip_shaded_edges",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":111,"column":74},"end":{"line":111,"column":112}}}))
+    + "\"></div>\n		<!--<div id=\"param-rendering-wireframe\" class=\"item paramtool\" title=\""
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.tooltip_wireframe",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":112,"column":72},"end":{"line":112,"column":107}}}))
+    + "\"></div>-->\n		<div class=\"separator paramtool\"></div>\n		<div id=\"param-gizmo-auto\" class=\"item paramtool\" title=\""
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.tooltip_auto",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":114,"column":59},"end":{"line":114,"column":89}}}))
+    + "\"></div>\n		<div id=\"param-gizmo-both\" class=\"item paramtool\" title=\""
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.tooltip_both",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":115,"column":59},"end":{"line":115,"column":89}}}))
+    + "\"></div>\n		<div id=\"param-gizmo-translate\" class=\"item paramtool\" title=\""
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.tooltip_translate",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":116,"column":64},"end":{"line":116,"column":99}}}))
+    + "\"></div>\n		<div id=\"param-gizmo-rotate\" class=\"item paramtool\" title=\""
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.tooltip_rotate",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":117,"column":61},"end":{"line":117,"column":93}}}))
+    + "\"></div>\n		<div id=\"param-gizmo-space\">\n			<div class=\"label\"></div>\n			<select>\n				<option value=\"local\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.space_local",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":121,"column":26},"end":{"line":121,"column":55}}}))
+    + "</option>\n				<option value=\"world\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.space_world",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":122,"column":26},"end":{"line":122,"column":55}}}))
+    + "</option>\n			</select>\n		</div>\n		<div id=\"tool-connect\" class=\"\" title=\"Connect\">Connect</div>\n	</div>\n	<div id=\"main\">\n			<div id=\"scene-wrapper\">\n				<div id=\"scene\" style=\"position: absolute\"></div>\n				<div id=\"scene-tooltip\"></div>\n				<div id=\"scene-camera\">\n					<span class=\"projection\"></span> <span class=\"orientation\"></span> | <span class=\"orbit\"></span>\n				</div>\n			</div>\n			<div id=\"library-wrapper\">\n				<div id=\"library-top-bar\">\n					<div class=\"level\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.library",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":137,"column":24},"end":{"line":137,"column":49}}}))
+    + "</div>\n					<div class=\"arrow sprite\"></div>\n					<div id=\"library-category-wrapper\">\n						<div class=\"txt\"></div>\n						<select id=\"library-category-select\">\n						</select>\n					</div>\n					<div id=\"library-colors\" style=\"display:block\">\n					</div>\n					<div id=\"library-extra\">\n						<div id=\"library-part-name\" style=\"display:none\"></div>\n					</div>\n					<!--<div id=\"library-search\">\n						<div id=\"library-search-button\"></div>\n						<input type=\"text\" id=\"library-search-field\" autocomplete=\"off\" placeholder=\""
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.mb.search_placeholder",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":151,"column":83},"end":{"line":151,"column":119}}}))
+    + "\"/>\n					</div>-->\n				</div>\n				<div id=\"library-part-list-wrapper\">\n					<div id=\"library-prev\" class=\"arrow\">\n						<div class=\"part\"></div>\n					</div>\n					<div id=\"library-part-list\">\n						<div class=\"no-overflow\"></div>\n					</div>\n					<div id=\"library-next\" class=\"arrow\">\n						<div class=\"part\"></div>\n					</div>\n				</div>\n			</div>\n		</div>\n</div>\n";
+},"useData":true});
+templates['myAssignments'] = template({"1":function(container,depth0,helpers,partials,data) {
+    var stack1, alias1=container.lambda, alias2=container.escapeExpression;
+
+  return "	<option value=\""
+    + alias2(alias1((depth0 != null ? depth0.id : depth0), depth0))
+    + "\">"
+    + alias2(alias1((depth0 != null ? depth0.name : depth0), depth0))
+    + " "
+    + ((stack1 = helpers["if"].call(depth0 != null ? depth0 : (container.nullContext || {}),(depth0 != null ? depth0.classroom : depth0),{"name":"if","hash":{},"fn":container.program(2, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":4,"column":43},"end":{"line":4,"column":97}}})) != null ? stack1 : "")
+    + "</option>\n";
+},"2":function(container,depth0,helpers,partials,data) {
+    var stack1;
+
+  return "("
+    + container.escapeExpression(container.lambda(((stack1 = (depth0 != null ? depth0.classroom : depth0)) != null ? stack1.name : stack1), depth0))
+    + ")";
+},"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
+    var stack1, alias1=depth0 != null ? depth0 : (container.nullContext || {});
+
+  return "<select id=\"selectProjectFolder\">\n  <option value=\"\">"
+    + ((stack1 = (helpers.i18n||(depth0 && depth0.i18n)||container.hooks.helperMissing).call(alias1,"msg.CHOOSE_ASSIGNMENT",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":2,"column":19},"end":{"line":2,"column":53}}})) != null ? stack1 : "")
+    + "</option>\n"
+    + ((stack1 = helpers.each.call(alias1,(depth0 != null ? depth0.assignments : depth0),{"name":"each","hash":{},"fn":container.program(1, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":3,"column":2},"end":{"line":5,"column":11}}})) != null ? stack1 : "")
+    + "</select>\n";
+},"useData":true});
+templates['myProjectFolders'] = template({"1":function(container,depth0,helpers,partials,data) {
+    var alias1=container.lambda, alias2=container.escapeExpression;
+
+  return "	<option value=\""
+    + alias2(alias1((depth0 != null ? depth0.id : depth0), depth0))
+    + "\">"
+    + alias2(alias1((depth0 != null ? depth0.name : depth0), depth0))
+    + "</option>\n";
+},"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
+    var stack1, alias1=depth0 != null ? depth0 : (container.nullContext || {});
+
+  return "<select id=\"selectProjectFolder\">\n  <option value=\"\">"
+    + container.escapeExpression((helpers.i18n||(depth0 && depth0.i18n)||container.hooks.helperMissing).call(alias1,"msg.ROOT_FOLDER",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":2,"column":19},"end":{"line":2,"column":45}}}))
+    + "</option>\n"
+    + ((stack1 = helpers.each.call(alias1,(depth0 != null ? depth0.projectfolders : depth0),{"name":"each","hash":{},"fn":container.program(1, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":3,"column":2},"end":{"line":5,"column":11}}})) != null ? stack1 : "")
+    + "</select>\n";
+},"useData":true});
+templates['options'] = template({"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
+    var helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=container.hooks.helperMissing, alias3=container.escapeExpression;
+
+  return "  <li id=\"options-privacy\">\n	"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.PRIVACY_C",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":2,"column":1},"end":{"line":2,"column":25}}}))
+    + "\n	<select id=\"sPrivacy\">\n	  <!-- PRIVACY_PRIVATE -->\n	  <option value=\"0\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.V0_PRIVATE",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":5,"column":21},"end":{"line":5,"column":46}}}))
+    + "</option>\n	  <!-- PRIVACY_DESCRIPTIONPUBLIC -->\n	  <option value=\"1\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.V1_PUBLIC_DESCRIPTION_ONLY",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":7,"column":21},"end":{"line":7,"column":62}}}))
+    + "</option>\n	  <!-- PRIVACY_DOWNLOADPUBLIC -->\n	  <option value=\"2\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.V2_PUBLIC_DESCRIPTION_AND_DOWNLOAD",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":9,"column":21},"end":{"line":9,"column":70}}}))
+    + "</option>\n	  <!-- PRIVACY_ALLPUBLIC -->\n	  <option value=\"3\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.V3_PUBLIC_PROJECT_INCLUDING_CODE",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":11,"column":21},"end":{"line":11,"column":68}}}))
+    + "</option>\n	</select>\n  </li>\n  <li id=\"options-copy\">\n	<button id=\"bCopyProject\" class=\"button\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.COPY_PROJECT",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":15,"column":42},"end":{"line":15,"column":69}}}))
+    + "</button>\n	<a id=\"bShowCopyProjectRestrictions\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.EDIT_COPIED_PROJECT_RESTRICTIONS",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":16,"column":38},"end":{"line":16,"column":85}}}))
+    + "</a>\n  </li>\n		\n  <div id=\"copyProjectRestrictions\">\n	"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.ON_COPIED_PROJECT_ALLOW_USER_TO",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":20,"column":1},"end":{"line":20,"column":47}}}))
+    + "\n	<div id=\"restrictionsList\">\n	  <ul>\n		<li class=\"itemTemplate\">\n		  <label>\n			<input type=\"checkbox\"/>\n			<span class=\"text\">foo</span>\n		  </label>\n		</li>\n	  </ul>\n	</div>\n  </div>\n  <li id=\"lbUsePyLint\" style=\"display:none;\">\n	<label>\n	  <input type=\"checkbox\" id=\"cbUsePyLint\" checked=\"true\" />\n	  "
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.USE_PYLINT",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":35,"column":3},"end":{"line":35,"column":28}}}))
+    + "\n	</label>\n  </li>\n  <li id=\"lbPort\">\n	"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.PORT_C",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":39,"column":1},"end":{"line":39,"column":22}}}))
+    + "\n	<select id=\"selectPort\"></select>\n	<button id=\"bRefreshPorts\" class=\"button\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.REFRESH",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":41,"column":43},"end":{"line":41,"column":65}}}))
+    + "</button>\n  </li>\n  <li id=\"rmcPluginDialogLink\" class=\"non-mimic-mode\">\n	<a id=\"bRmcInstallDialog\" href=\"javascript:void(0)\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.install.INSTALL_RMC_PLUGIN",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":44,"column":53},"end":{"line":44,"column":94}}}))
+    + "</a>\n  </li>\n  <li id=\"startFirmwareUpdateLink\" class=\"non-mimic-mode\">\n	<a id=\"bStartFirmwareUpdate\" href=\"javascript:void(0)\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.START_FIRMWARE_UPDATE",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":47,"column":56},"end":{"line":47,"column":92}}}))
+    + "</a>\n  </li>\n\n  <li id=\"labelIQSlot\" class=\"non-mimic-mode\">\n	"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.PROGRAM_SLOT_C",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":51,"column":1},"end":{"line":51,"column":30}}}))
+    + "\n	<select id=\"selectDownloadIQSlot\">\n		<option value=\"user1\" selected>"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.SLOT1",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":53,"column":33},"end":{"line":53,"column":53}}}))
+    + "</option>\n		<option value=\"user2\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.SLOT2",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":54,"column":24},"end":{"line":54,"column":44}}}))
+    + "</option>\n	  </select>\n  </li>\n	<li id=\"labelV5Slot\" class=\"non-mimic-mode\">\n	"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.PROGRAM_SLOT_C",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":58,"column":1},"end":{"line":58,"column":30}}}))
+    + "\n	<select id=\"selectDownloadV5Slot\">\n		<option value=\"user1\" selected>"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.SLOT1",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":60,"column":33},"end":{"line":60,"column":53}}}))
+    + "</option>\n		<option value=\"user2\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.SLOT2",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":61,"column":24},"end":{"line":61,"column":44}}}))
+    + "</option>\n		<option value=\"user3\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.SLOT3",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":62,"column":24},"end":{"line":62,"column":44}}}))
+    + "</option>\n		<option value=\"user4\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.SLOT4",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":63,"column":24},"end":{"line":63,"column":44}}}))
+    + "</option>\n		<option value=\"user5\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.SLOT5",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":64,"column":24},"end":{"line":64,"column":44}}}))
+    + "</option>\n		<option value=\"user6\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.SLOT6",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":65,"column":24},"end":{"line":65,"column":44}}}))
+    + "</option>\n		<option value=\"user7\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.SLOT7",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":66,"column":24},"end":{"line":66,"column":44}}}))
+    + "</option>\n		<option value=\"user8\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.SLOT8",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":67,"column":24},"end":{"line":67,"column":44}}}))
+    + "</option>\n	  </select>\n  </li>\n  <li id=\"labelForceFullDownload\" class=\"non-mimic-mode\">\n	<label>\n	  <input type=\"checkbox\" id=\"cbForceFullDownload\" />\n	  "
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.FORCE_FULL_DOWNLOAD",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":73,"column":3},"end":{"line":73,"column":37}}}))
+    + "\n	</label>\n  </li>\n  <!--<li id=\"labelEmscriptenConnectedMode\" class=\"non-mimic-mode\">\n	<label>\n	  <input type=\"checkbox\" id=\"cbEmscriptenConnectedMode\" />\n	  "
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.RUN_IN_CONNECTED_MODE_EMSCRIPTEN",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":79,"column":3},"end":{"line":79,"column":50}}}))
+    + "\n	</label>\n  </li>-->\n  <li id=\"options-featured\">\n	Featured: <input id=\"iFeatured\" type=\"text\" value=\""
+    + alias3(((helper = (helper = helpers.featured || (depth0 != null ? depth0.featured : depth0)) != null ? helper : alias2),(typeof helper === "function" ? helper.call(alias1,{"name":"featured","hash":{},"data":data,"loc":{"start":{"line":83,"column":52},"end":{"line":83,"column":64}}}) : helper)))
+    + "\" />\n	<button id=\"bFeatured\" class=\"button\">Set</button>\n  </li>\n\n  <li class=\"non-mimic-mode\">\n	<label>\n	  <input type=\"checkbox\" id=\"cbCopyConfigToCode\" checked=\"true\" />\n	  "
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.COPY_CONFIG_TO_CODE",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":90,"column":3},"end":{"line":90,"column":37}}}))
+    + "\n	</label>\n  </li>\n  <li class=\"mimic-mode\">\n	"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.MIMIC_3D_GRAPHICS_DETAIL_C",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":94,"column":1},"end":{"line":94,"column":42}}}))
+    + "\n	<select id=\"selectMimicDetail\">\n	  <option>"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.LOW",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":96,"column":11},"end":{"line":96,"column":29}}}))
+    + "</option>\n	  <option>"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.MEDIUM",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":97,"column":11},"end":{"line":97,"column":32}}}))
+    + "</option>\n	  <option>"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.HIGH",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":98,"column":11},"end":{"line":98,"column":30}}}))
+    + "</option>\n	</select>\n  </li>\n  <li class=\"mimic-mode\">\n	"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.MIMIC_3D_PHYSICS_LEVEL_C",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":102,"column":1},"end":{"line":102,"column":40}}}))
+    + "\n	<select id=\"selectMimicPhysicsLevel\">\n	  <option>"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.NORMAL",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":104,"column":11},"end":{"line":104,"column":32}}}))
+    + "</option>\n	  <option>"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.HIGH",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":105,"column":11},"end":{"line":105,"column":30}}}))
+    + "</option>\n	</select>\n  </li>\n  <li class=\"mimic-mode\">\n	<label>\n	  <input type=\"checkbox\" id=\"cbMimicPhysicsOutlines\" />\n	  "
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.SHOW_MIMIC_PHYSICS_OUTLINES",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":111,"column":3},"end":{"line":111,"column":45}}}))
+    + "\n	</label>\n  </li>\n	<li id=\"lbPort\" class=\"mimic-mode\">\n	"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.ARENA_C",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":115,"column":1},"end":{"line":115,"column":23}}}))
+    + "\n	<select id=\"selectArena\"></select>\n	<button id=\"bRefreshArenas\" class=\"button\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.REFRESH",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":117,"column":44},"end":{"line":117,"column":66}}}))
+    + "</button>\n  </li>\n";
+},"useData":true});
+templates['projects'] = template({"1":function(container,depth0,helpers,partials,data,blockParams,depths) {
+    var stack1, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=container.lambda, alias3=container.escapeExpression;
+
+  return "<li id='"
+    + ((stack1 = helpers["if"].call(alias1,(depths[1] != null ? depths[1].isLocal : depths[1]),{"name":"if","hash":{},"fn":container.program(2, data, 0, blockParams, depths),"inverse":container.noop,"data":data,"loc":{"start":{"line":2,"column":8},"end":{"line":2,"column":39}}})) != null ? stack1 : "")
+    + "project_"
+    + alias3(alias2((depth0 != null ? depth0.id : depth0), depth0))
+    + "'\n	data-folderid='"
+    + alias3(alias2((depth0 != null ? depth0.projectfolderId : depth0), depth0))
+    + "'\n	onclick='eh_navigate(\""
+    + alias3(alias2((depth0 != null ? depth0.id : depth0), depth0))
+    + "\")'\n"
+    + ((stack1 = helpers["if"].call(alias1,(depths[1] != null ? depths[1].supportsDrag : depths[1]),{"name":"if","hash":{},"fn":container.program(4, data, 0, blockParams, depths),"inverse":container.noop,"data":data,"loc":{"start":{"line":5,"column":1},"end":{"line":9,"column":8}}})) != null ? stack1 : "")
+    + ">\n	<div class='projectImgDiv'>\n	  <a href='"
+    + alias3(alias2((depth0 != null ? depth0.url : depth0), depth0))
+    + "'>\n		<img src='"
+    + alias3(alias2((depth0 != null ? depth0.typeIconUrl : depth0), depth0))
+    + "' alt='"
+    + alias3(alias2((depth0 != null ? depth0.uiName : depth0), depth0))
+    + "' class='projectImg' />\n		"
+    + ((stack1 = helpers["if"].call(alias1,(depth0 != null ? depth0.overlayIconUrl : depth0),{"name":"if","hash":{},"fn":container.program(9, data, 0, blockParams, depths),"inverse":container.noop,"data":data,"loc":{"start":{"line":13,"column":2},"end":{"line":13,"column":121}}})) != null ? stack1 : "")
+    + "\n	  </a>\n	</div>\n	<div>\n	  <a href='"
+    + alias3(alias2((depth0 != null ? depth0.url : depth0), depth0))
+    + "'><span id='"
+    + ((stack1 = helpers["if"].call(alias1,(depths[1] != null ? depths[1].isLocal : depths[1]),{"name":"if","hash":{},"fn":container.program(2, data, 0, blockParams, depths),"inverse":container.noop,"data":data,"loc":{"start":{"line":17,"column":36},"end":{"line":17,"column":67}}})) != null ? stack1 : "")
+    + "project_name_"
+    + alias3(alias2((depth0 != null ? depth0.id : depth0), depth0))
+    + "' class='projectName name'>"
+    + alias3(alias2((depth0 != null ? depth0.uiName : depth0), depth0))
+    + "</span><br/>\n		  <span class='projectDescription'>"
+    + alias3(alias2((depth0 != null ? depth0.description : depth0), depth0))
+    + "</span></a>\n	</div>\n\n"
+    + ((stack1 = helpers["if"].call(alias1,(depths[1] != null ? depths[1].canChange : depths[1]),{"name":"if","hash":{},"fn":container.program(11, data, 0, blockParams, depths),"inverse":container.noop,"data":data,"loc":{"start":{"line":21,"column":1},"end":{"line":29,"column":8}}})) != null ? stack1 : "")
+    + "</li>\n";
+},"2":function(container,depth0,helpers,partials,data) {
+    return "local_";
+},"4":function(container,depth0,helpers,partials,data,blockParams,depths) {
+    var stack1, alias1=depth0 != null ? depth0 : (container.nullContext || {});
+
+  return "		class=\""
+    + ((stack1 = helpers["if"].call(alias1,(depths[2] != null ? depths[2].isLocal : depths[2]),{"name":"if","hash":{},"fn":container.program(5, data, 0, blockParams, depths),"inverse":container.noop,"data":data,"loc":{"start":{"line":6,"column":9},"end":{"line":6,"column":43}}})) != null ? stack1 : "")
+    + "draggableProject\"\n\n		"
+    + ((stack1 = helpers["if"].call(alias1,(depths[2] != null ? depths[2].isLocal : depths[2]),{"name":"if","hash":{},"fn":container.program(7, data, 0, blockParams, depths),"inverse":container.noop,"data":data,"loc":{"start":{"line":8,"column":2},"end":{"line":8,"column":35}}})) != null ? stack1 : "")
+    + "\n	";
+},"5":function(container,depth0,helpers,partials,data) {
+    return "local-";
+},"7":function(container,depth0,helpers,partials,data) {
+    return "local";
+},"9":function(container,depth0,helpers,partials,data) {
+    var alias1=container.lambda, alias2=container.escapeExpression;
+
+  return "<img src='"
+    + alias2(alias1((depth0 != null ? depth0.overlayIconUrl : depth0), depth0))
+    + "' alt='"
+    + alias2(alias1((depth0 != null ? depth0.uiName : depth0), depth0))
+    + "' class='projectImgOverlay' />";
+},"11":function(container,depth0,helpers,partials,data,blockParams,depths) {
+    var stack1;
+
+  return ((stack1 = helpers["if"].call(depth0 != null ? depth0 : (container.nullContext || {}),(depths[2] != null ? depths[2].isLocal : depths[2]),{"name":"if","hash":{},"fn":container.program(12, data, 0, blockParams, depths),"inverse":container.program(14, data, 0, blockParams, depths),"data":data,"loc":{"start":{"line":22,"column":3},"end":{"line":28,"column":10}}})) != null ? stack1 : "");
+},"12":function(container,depth0,helpers,partials,data) {
+    var alias1=container.lambda, alias2=container.escapeExpression;
+
+  return "		<button class='button deleteicon' onclick='eh_start_cmn.deleteProject(\""
+    + alias2(alias1((depth0 != null ? depth0.id : depth0), depth0))
+    + "\", \"#local_project_name_"
+    + alias2(alias1((depth0 != null ? depth0.id : depth0), depth0))
+    + "\", true);'></button>\n		<button class='button gearicon' onclick='eh_start_cmn.editProject(\""
+    + alias2(alias1((depth0 != null ? depth0.id : depth0), depth0))
+    + "\", \"#local_project_name_"
+    + alias2(alias1((depth0 != null ? depth0.id : depth0), depth0))
+    + "\", true);'></button>\n";
+},"14":function(container,depth0,helpers,partials,data) {
+    var alias1=container.lambda, alias2=container.escapeExpression;
+
+  return "		<button class='button deleteicon' onclick='eh_start_cmn.deleteProject(\""
+    + alias2(alias1((depth0 != null ? depth0.id : depth0), depth0))
+    + "\", \"#project_name_"
+    + alias2(alias1((depth0 != null ? depth0.id : depth0), depth0))
+    + "\");'></button>\n		<button class='button gearicon' onclick='eh_start_cmn.editProject(\""
+    + alias2(alias1((depth0 != null ? depth0.id : depth0), depth0))
+    + "\", \"#project_name_"
+    + alias2(alias1((depth0 != null ? depth0.id : depth0), depth0))
+    + "\");'></button>\n";
+},"16":function(container,depth0,helpers,partials,data) {
+    var stack1;
+
+  return ((stack1 = helpers["if"].call(depth0 != null ? depth0 : (container.nullContext || {}),(depth0 != null ? depth0.canChange : depth0),{"name":"if","hash":{},"fn":container.program(17, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":32,"column":2},"end":{"line":34,"column":9}}})) != null ? stack1 : "");
+},"17":function(container,depth0,helpers,partials,data) {
+    var stack1;
+
+  return "	<p>"
+    + ((stack1 = (helpers.i18n||(depth0 && depth0.i18n)||container.hooks.helperMissing).call(depth0 != null ? depth0 : (container.nullContext || {}),"msg.GENERIC_NO_PROJECTS",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":33,"column":4},"end":{"line":33,"column":40}}})) != null ? stack1 : "")
+    + "</p>\n";
+},"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data,blockParams,depths) {
+    var stack1;
+
+  return ((stack1 = helpers.each.call(depth0 != null ? depth0 : (container.nullContext || {}),(depth0 != null ? depth0.projects : depth0),{"name":"each","hash":{},"fn":container.program(1, data, 0, blockParams, depths),"inverse":container.program(16, data, 0, blockParams, depths),"data":data,"loc":{"start":{"line":1,"column":0},"end":{"line":35,"column":9}}})) != null ? stack1 : "");
+},"useData":true,"useDepths":true});
+templates['students'] = template({"1":function(container,depth0,helpers,partials,data) {
+    var alias1=container.lambda, alias2=container.escapeExpression;
+
+  return "  <li id='member_"
+    + alias2(alias1((depth0 != null ? depth0.member_id : depth0), depth0))
+    + "' \n	  onclick='classroom.select_member(\""
+    + alias2(alias1((depth0 != null ? depth0.member_id : depth0), depth0))
+    + "\");'>\n	  <div>\n		  <img src='/studio/static/skin/frontend/base/default/images/RobotMesh/members/student.png' alt='"
+    + alias2(alias1((depth0 != null ? depth0.name : depth0), depth0))
+    + "' class='memberImg'\n				onclick='classroom.select_member(\""
+    + alias2(alias1((depth0 != null ? depth0.member_id : depth0), depth0))
+    + "\");'/>\n	  </div>\n	  <div>\n		  <span id='name_member_"
+    + alias2(alias1((depth0 != null ? depth0.member_id : depth0), depth0))
+    + "' class='memberName name'>"
+    + alias2(alias1((depth0 != null ? depth0.name : depth0), depth0))
+    + "</span>\n	  </div>\n\n  </li>\n";
+},"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
+    var stack1, helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=container.hooks.helperMissing, alias3="function", alias4=container.escapeExpression;
+
+  return "<h1 class=\"members-heading\">\n  "
+    + alias4(((helper = (helper = helpers.name || (depth0 != null ? depth0.name : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"name","hash":{},"data":data,"loc":{"start":{"line":2,"column":2},"end":{"line":2,"column":10}}}) : helper)))
+    + " ("
+    + alias4(((helper = (helper = helpers.school || (depth0 != null ? depth0.school : depth0)) != null ? helper : alias2),(typeof helper === alias3 ? helper.call(alias1,{"name":"school","hash":{},"data":data,"loc":{"start":{"line":2,"column":12},"end":{"line":2,"column":22}}}) : helper)))
+    + ")\n</h1>\n\n<div id=\"members-list\" class=\"memberList\">\n  <div class=\"section\" id=\"buttonToolbar\">\n	<h2>"
+    + ((stack1 = (helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.NAME_OR_USERNAME_C",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":7,"column":5},"end":{"line":7,"column":40}}})) != null ? stack1 : "")
+    + "</h2>\n	<input type=\"text\" id=\"tbFilterName\" class=\"input-text\" autocomplete=\"new-password\"/>\n  </div>\n\n  <span id='noMembersLabel' style='display:none;'></span>\n\n"
+    + ((stack1 = helpers.each.call(alias1,(depth0 != null ? depth0.students : depth0),{"name":"each","hash":{},"fn":container.program(1, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":13,"column":2},"end":{"line":25,"column":11}}})) != null ? stack1 : "")
+    + "</div>\n\n";
+},"useData":true});
+templates['title'] = template({"1":function(container,depth0,helpers,partials,data) {
+    var helper;
+
+  return "&gt; "
+    + container.escapeExpression(((helper = (helper = helpers.projectfolder_name || (depth0 != null ? depth0.projectfolder_name : depth0)) != null ? helper : container.hooks.helperMissing),(typeof helper === "function" ? helper.call(depth0 != null ? depth0 : (container.nullContext || {}),{"name":"projectfolder_name","hash":{},"data":data,"loc":{"start":{"line":2,"column":34},"end":{"line":2,"column":56}}}) : helper)))
+    + "<br/>";
+},"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
+    var stack1, helper, alias1=depth0 != null ? depth0 : (container.nullContext || {}), alias2=container.hooks.helperMissing, alias3=container.escapeExpression;
+
+  return "<a href=\"/studio\">"
+    + alias3((helpers.i18n||(depth0 && depth0.i18n)||alias2).call(alias1,"msg.MY_PROJECTS",{"name":"i18n","hash":{},"data":data,"loc":{"start":{"line":1,"column":18},"end":{"line":1,"column":44}}}))
+    + "</a><br/>\n<b>"
+    + ((stack1 = helpers["if"].call(alias1,(depth0 != null ? depth0.projectfolder_name : depth0),{"name":"if","hash":{},"fn":container.program(1, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":2,"column":3},"end":{"line":2,"column":68}}})) != null ? stack1 : "")
+    + "&gt; "
+    + alias3(((helper = (helper = helpers.ui_project_name || (depth0 != null ? depth0.ui_project_name : depth0)) != null ? helper : alias2),(typeof helper === "function" ? helper.call(alias1,{"name":"ui_project_name","hash":{},"data":data,"loc":{"start":{"line":2,"column":73},"end":{"line":2,"column":92}}}) : helper)))
+    + "</b><br/>\n";
+},"useData":true});
+templates['usbGamepadTypes'] = template({"1":function(container,depth0,helpers,partials,data) {
+    var alias1=container.lambda, alias2=container.escapeExpression;
+
+  return "<li id=\"gamepad_item_"
+    + alias2(alias1((depth0 != null ? depth0.id : depth0), depth0))
+    + "\" class=\"gamepad_item\">\n  <div>\n	<img src='/studio/static/skin/frontend/base/default/images/RobotMesh/usb-joystick-types/"
+    + alias2(alias1((depth0 != null ? depth0.iconName : depth0), depth0))
+    + "_thumb.png' alt='"
+    + alias2(alias1((depth0 != null ? depth0.name : depth0), depth0))
+    + "'></img>\n  </div>\n  <div style=\"cursor:default;\">\n	"
+    + alias2(alias1((depth0 != null ? depth0.name : depth0), depth0))
+    + "\n	<br/>\n	<a href=\""
+    + alias2(alias1((depth0 != null ? depth0.buyLinkUrl : depth0), depth0))
+    + "\" target=\"_blank\">"
+    + alias2(alias1((depth0 != null ? depth0.buyLinkText : depth0), depth0))
+    + "</a>\n  </div>\n\n</li>\n";
+},"compiler":[8,">= 4.3.0"],"main":function(container,depth0,helpers,partials,data) {
+    var stack1;
+
+  return ((stack1 = helpers.each.call(depth0 != null ? depth0 : (container.nullContext || {}),(depth0 != null ? depth0.types : depth0),{"name":"each","hash":{},"fn":container.program(1, data, 0),"inverse":container.noop,"data":data,"loc":{"start":{"line":1,"column":0},"end":{"line":13,"column":9}}})) != null ? stack1 : "");
+},"useData":true});
+})();

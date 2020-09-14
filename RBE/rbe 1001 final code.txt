@@ -1,0 +1,531 @@
+#include "vex.h"
+#include <iostream>
+#define forward fwd 
+using namespace std;
+using namespace vex;
+
+//#region config_globals
+vex::brain  Brain;
+vex::motor  leftMotor(vex::PORT1, vex::gearSetting::ratio18_1, false);
+vex::motor  rightMotor(vex::PORT2, vex::gearSetting::ratio18_1, true);
+vex::motor  claw(vex::PORT4, vex::gearSetting::ratio18_1, false);
+vex::motor  elevator(vex::PORT5, vex::gearSetting::ratio18_1, false);
+vex::line   rightSensor(Brain.ThreeWirePort.C);
+vex::line   leftSensor(Brain.ThreeWirePort.B);
+vex::bumper button(Brain.ThreeWirePort.A);
+vex::sonar  mySonar(Brain.ThreeWirePort.E);
+//#endregion config_globals
+
+#include <cmath>
+
+//declaring functions 
+void Move_Left(float angle);
+void Move_Right(float angle);
+void Start_Point(void);
+
+// variables
+float rightLineSensor = rightSensor.value(vex::analogUnits::range12bit);
+float leftLineSensor = leftSensor.value(vex::analogUnits::range12bit);
+int currDistance = mySonar.distance(distanceUnits::cm);
+enum bot_state {goToBakery, pickUpPizza, goToSpeedBump, crossSpeedBump, deliveringPizza, goToStart} state;
+enum bot_floors {floor1, floor2, floor3, floor4} floors;
+float rotations(float angle);
+const float WHEEL_CIRCUMFRANCE = 310;
+const float ROBOT_CIRCUMFRANCE = 1005;
+const float GEAR_RATIO = 1;
+const float ROBOT_TURN_CONST = 1.11;
+
+const float Velocity = 20;
+float blue_line[2] = {66, 69};
+float grey_line[2] = {70, 100};
+float white_line[2] = {60, 65};
+
+const float screen_middle = 316 / 2;
+float angle; 
+
+//function prototype
+bool checkDistanceBakery(void);
+bool checkIsHoldingPizza(void);
+bool checkSpeedBump(void);
+bool checkArriveBump(void);
+bool checkArriveDorm(void);
+bool checkDeliveredPizza(void);
+
+void handleDistanceBakery(void);
+void handleIsHoldingPizza(void);
+void handleGoToSpeedBump(void);
+void handleCrossSpeedBump(void);
+void handleDeliveringPizza(void);
+void handleReturnToStart(void); 
+
+int main(void) {
+    
+    state = goToBakery;
+    floors = floor1;
+    for (int i = 0; i < 2; i++)
+    {
+    //state = deliveringPizza;
+    state = goToBakery;
+    if(checkDistanceBakery()){ handleDistanceBakery();}
+    if(checkIsHoldingPizza()){ handleIsHoldingPizza();}
+    if(checkSpeedBump()){ handleGoToSpeedBump();}
+    if(checkArriveBump()){ handleCrossSpeedBump();}
+    if(checkArriveDorm()){ handleDeliveringPizza();}
+    if(checkDeliveredPizza()){ handleReturnToStart();}
+    }
+    
+}
+
+/*checkers needed: in state machine order 
+Camera reads with in distance of bakery wall
+Button/ ultrasonic is pressed for the picking up the pizza
+line sensing switch statement for driving too speed bump
+line sensing switch statment to drive to dorm
+button/ultrasonic for delivery of pizza */
+
+bool checkDistanceBakery(void){
+    bool retValue = false;
+    sleepMs(250);
+    currDistance = mySonar.distance(distanceUnits::cm);
+    cout << currDistance << endl; 
+    while(currDistance > 21) // while the current ditance is is greater than 21 then go forwad 
+    {
+        sleepMs(250);
+        currDistance = mySonar.distance(distanceUnits::cm); //read ultrasonic sensor
+        cout << currDistance << endl; 
+       
+            leftMotor.spin(fwd);
+            rightMotor.spin(fwd);
+            retValue = true; 
+    }
+    if(currDistance <= 21){
+         leftMotor.stop();
+         rightMotor.stop();
+         return retValue;
+    } 
+}
+
+bool checkIsHoldingPizza(void){
+    
+    bool retValue = false; 
+    while(currDistance > 6)
+    {
+        currDistance = mySonar.distance(distanceUnits::cm); 
+    }
+    retValue = true; 
+    return retValue; 
+}
+
+bool checkSpeedBump(void){
+    
+    bool retValue = false; 
+    rightLineSensor = rightSensor.value(vex::analogUnits::range12bit);
+    cout << "right line sensor value: " << rightLineSensor;
+    leftLineSensor = leftSensor.value(vex::analogUnits::range12bit);
+    cout << "right line sensor value : " << leftLineSensor;
+    if(((blue_line[1] > rightLineSensor))
+        ||
+        ((rightLineSensor > blue_line[0]))
+        ||
+        ((leftLineSensor > blue_line[0]))
+        || 
+        ((blue_line[1] > leftLineSensor))){
+        retValue = true; 
+    }
+    return retValue; 
+}
+
+bool checkArriveBump(void)
+{
+    bool retValue = false; 
+    rightLineSensor = rightSensor.value(vex::analogUnits::range12bit);
+    cout << "right line sensor value: " << rightLineSensor;
+    leftLineSensor = leftSensor.value(vex::analogUnits::range12bit);
+    cout << "right line sensor value : " << leftLineSensor;
+    
+    if(((white_line[1] > rightLineSensor))
+        ||
+        ((rightLineSensor > white_line[0]))
+        &&
+        ((leftLineSensor > white_line[0]))
+        || 
+        ((white_line[1] > leftLineSensor))){
+        retValue = true; 
+    }
+    
+    return retValue;
+}
+
+bool checkArriveDorm(void){
+    
+    bool retValue = false; 
+    rightLineSensor = rightSensor.value(vex::analogUnits::range12bit);
+    cout << "right line sensor value: " << rightLineSensor;
+    leftLineSensor = leftSensor.value(vex::analogUnits::range12bit);
+    cout << "right line sensor value : " << leftLineSensor;
+    
+    if(((white_line[1] > rightLineSensor))
+        ||
+        ((rightLineSensor > white_line[0]))
+        &&
+        ((leftLineSensor > white_line[0]))
+        || 
+        ((white_line[1] > leftLineSensor))){
+        retValue = true; 
+    }
+    return retValue; 
+}
+
+
+bool checkDeliveredPizza(void){
+    
+    currDistance = mySonar.distance(distanceUnits::cm); //read ultrasonic sensor; 
+    bool retValue = false; 
+    if(currDistance > 6){
+        retValue = true; 
+    }
+    return retValue; 
+}
+
+
+
+//******************************************************************************************
+//******************************************************************************************
+void handleDistanceBakery(void){
+    cout << "arrived to bakery " << state << endl; 
+    
+    if(state == goToBakery){
+        cout << "inside if" << endl; 
+        Start_Point(); 
+        elevator.rotateFor(directionType::fwd, 6, rotationUnits::rev, 30, velocityUnits::pct);// move elevator 
+        cout << "lifted" << endl;
+        
+        claw.rotateFor(directionType::rev, .05, rotationUnits::rev, 70, velocityUnits::pct);// close claw a little
+        leftMotor.startRotateFor(directionType::fwd, .3, rotationUnits::rev, 10, velocityUnits::pct);// move foward at a slower pace to get pizza 
+        rightMotor.rotateFor(directionType::fwd, .3, rotationUnits::rev, 10, velocityUnits::pct);
+        cout << "Ready for Pizza" << endl;
+ 
+        //elevator.rotateFor(directionType::rev, .4, rotationUnits::rev, 30, velocityUnits::pct, false);// close elevator a little
+        //leftMotor.startRotateFor(directionType::rev, 2, rotationUnits::rev, 10, velocityUnits::pct);// move foward at a slower pace to get pizza 
+        //rightMotor.rotateFor(directionType::rev, 2, rotationUnits::rev, 10, velocityUnits::pct);
+        
+        state = pickUpPizza;
+    }
+}
+
+void handleIsHoldingPizza(void){
+    
+    claw.rotateFor(directionType::rev, .4, rotationUnits::rev, 30, velocityUnits::pct, false); // close claw 
+    rightLineSensor = rightSensor.value(vex::analogUnits::range12bit);
+    cout << "right line sensor value: " << rightLineSensor;
+    leftLineSensor = leftSensor.value(vex::analogUnits::range12bit);
+    cout << "right line sensor value : " << leftLineSensor;
+    
+    if(state == pickUpPizza){
+        //move back hard coded distance
+        leftMotor.startRotateFor(directionType::rev, .5, rotationUnits::rev, 10, velocityUnits::pct);
+        rightMotor.rotateFor(directionType::rev, .5, rotationUnits::rev, 10, velocityUnits::pct);
+        elevator.rotateFor(-1750, vex::rotationUnits::deg, 100, vex::velocityUnits::pct); //lower arm to speed bump height
+    
+        
+        while( (!(blue_line[1] > rightLineSensor))
+                ||
+                (!(rightLineSensor > blue_line[0]))
+                &&
+                (!(leftLineSensor > blue_line[0]))
+                || 
+                (!(blue_line[1] > leftLineSensor))){
+                    
+            //move back
+            sleepMs(100);
+            rightLineSensor = rightSensor.value(vex::percentUnits::pct);
+            cout << "right line sensor value: " << rightLineSensor<< endl ;
+            leftLineSensor = leftSensor.value(vex::percentUnits::pct);
+            cout << " left line senhsor value : " << leftLineSensor<< endl;
+            leftMotor.spin(directionType::rev,5, velocityUnits::pct);
+            rightMotor.spin(directionType::rev,5, velocityUnits::pct);
+        }
+        
+        leftMotor.stop();
+        rightMotor.stop();
+        
+        cout << "is holding pizza"; 
+        state = goToSpeedBump;
+    }
+}
+
+void handleGoToSpeedBump(void){
+    
+    rightLineSensor = rightSensor.value(vex::analogUnits::range12bit);
+    cout << "right line sensor value: " << rightLineSensor;
+    leftLineSensor = leftSensor.value(vex::analogUnits::range12bit);
+    cout << "right line sensor value : " << leftLineSensor;
+    
+    if(state == goToSpeedBump){
+        Move_Right(88); //turn right 
+        sleepMs(250);
+        
+        leftMotor.startRotateFor(directionType::fwd, 4, rotationUnits::rev, 60, velocityUnits::pct);
+        rightMotor.rotateFor(directionType::fwd, 4, rotationUnits::rev, 60, velocityUnits::pct);
+        leftMotor.startRotateFor(directionType::fwd, .4, rotationUnits::rev, 30, velocityUnits::pct);
+        rightMotor.rotateFor(directionType::fwd, .4, rotationUnits::rev, 30, velocityUnits::pct);
+        
+        while( (!(white_line[1] > rightLineSensor))
+                ||
+                (!(rightLineSensor > white_line[0]))
+                &&
+                (!(leftLineSensor > white_line[0]))
+                || 
+                (!(white_line[1] > leftLineSensor))){
+            // move foward
+            sleepMs(100);
+            rightLineSensor = rightSensor.value(vex::percentUnits::pct);
+            cout << "right line sensor value: " << rightLineSensor<< endl ;
+            leftLineSensor = leftSensor.value(vex::percentUnits::pct);
+            cout << " left line senhsor value : " << leftLineSensor<< endl;
+            leftMotor.spin(directionType::fwd, 15, velocityUnits::pct);
+            rightMotor.spin(directionType::fwd, 15, velocityUnits::pct);
+        }
+        
+        Move_Right(100); // turn 90 degrees to the right 
+        
+        state = crossSpeedBump; 
+        cout << "at speed bump"; 
+       
+    }
+}
+
+void handleCrossSpeedBump(void){
+    
+    if(state == crossSpeedBump){
+    
+    //drive foward at certain time and speed
+    leftMotor.startRotateFor(1.5, vex::rotationUnits::rev, 30, vex::velocityUnits::pct);
+    rightMotor.rotateFor(1.5, vex::rotationUnits::rev, 30, vex::velocityUnits::pct);
+    leftMotor.startRotateFor(3, vex::rotationUnits::rev, 50, vex::velocityUnits::pct);
+    rightMotor.rotateFor(3, vex::rotationUnits::rev, 50, vex::velocityUnits::pct);
+    sleepMs(1000);
+    elevator.rotateFor(directionType::rev, .3, rotationUnits::rev, 30, velocityUnits::pct);
+    while( (!(white_line[1] > rightLineSensor))
+                ||
+                (!(rightLineSensor > white_line[0]))
+                &&
+                (!(leftLineSensor > white_line[0]))
+                || 
+                (!(white_line[1] > leftLineSensor))){
+            // move foward
+            sleepMs(100);
+            rightLineSensor = rightSensor.value(vex::percentUnits::pct);
+            cout << "right line sensor value: " << rightLineSensor<< endl ;
+            leftLineSensor = leftSensor.value(vex::percentUnits::pct);
+            cout << " left line senhsor value : " << leftLineSensor<< endl;
+            leftMotor.spin(directionType::fwd, 20, velocityUnits::pct);
+            rightMotor.spin(directionType::fwd, 20, velocityUnits::pct);
+        }
+        
+    state = deliveringPizza; 
+    cout << "crossed speed bump"; 
+       
+    }
+}
+
+
+void handleDeliveringPizza(void){
+    
+    Move_Right(10);
+    claw.spin(directionType::rev);  // close claw --> to hold pizza
+    
+    if(state == deliveringPizza){
+        
+        while((!(white_line[1] > rightLineSensor))
+                ||
+                (!(rightLineSensor > white_line[0]))
+                &&
+                (!(leftLineSensor > white_line[0]))
+                || 
+                (!(white_line[1] > leftLineSensor))){
+                    
+            rightLineSensor = rightSensor.value(vex::percentUnits::pct);
+            cout << "right line sensor value: " << rightLineSensor;
+            leftLineSensor = leftSensor.value(vex::percentUnits::pct);
+            cout << "right line sensor value : " << leftLineSensor;
+            
+            leftMotor.spin(fwd);
+            rightMotor.spin(fwd);
+        }
+        
+        Move_Right(100); //turn right 
+        //drive foward a hard coded distance
+        leftMotor.startRotateFor(.6, vex::rotationUnits::rev, 35, vex::velocityUnits::pct);
+        rightMotor.rotateFor(.6, vex::rotationUnits::rev, 35, vex::velocityUnits::pct);
+        sleepMs(1000);
+                    
+        switch (floors){
+            
+            case floor1:
+                Start_Point();
+                elevator.rotateFor(50 , vex::rotationUnits::deg, 100, vex::velocityUnits::pct); //lower claw to ground 
+                //drive foward
+                leftMotor.startRotateFor(.6, vex::rotationUnits::rev, 40, vex::velocityUnits::pct);
+                rightMotor.rotateFor(.6, vex::rotationUnits::rev, 40, vex::velocityUnits::pct);
+                //open claw
+                claw.startRotateFor(directionType::fwd, .2, rotationUnits::rev, 30, velocityUnits::pct); 
+                sleepMs(1000);
+                // reverse hard coded distance 
+                leftMotor.startRotateFor(-.8, vex::rotationUnits::rev, 40, vex::velocityUnits::pct);
+                rightMotor.rotateFor(-.8, vex::rotationUnits::rev, 40, vex::velocityUnits::pct);
+                floors = floor2; 
+                break;
+                
+            case floor2:
+                Start_Point();
+                elevator.rotateFor(1100, vex::rotationUnits::deg, 100, vex::velocityUnits::pct); //lift floor 2 distance 
+                //drive foward
+                leftMotor.startRotateFor(.6, vex::rotationUnits::rev, 35, vex::velocityUnits::pct);
+                rightMotor.rotateFor(.6, vex::rotationUnits::rev, 35, vex::velocityUnits::pct);
+                //open claw
+                claw.rotateFor(directionType::fwd, .2, rotationUnits::rev, 50, velocityUnits::pct);
+                sleepMs(500);
+                // reverse hard coded distance
+                leftMotor.startRotateFor(-.8, vex::rotationUnits::rev, 40, vex::velocityUnits::pct);
+                rightMotor.rotateFor(-.8, vex::rotationUnits::rev, 40, vex::velocityUnits::pct);
+               // floors = floor3; 
+                break;
+                
+        /*    case floor3:
+                Start_Point();
+                elevator.rotateFor(2300, vex::rotationUnits::deg, 100, vex::velocityUnits::pct); //lift floor 3 distance 
+                // drive foward 
+                leftMotor.startRotateFor(.6, vex::rotationUnits::rev, 35, vex::velocityUnits::pct);
+                rightMotor.rotateFor(.6, vex::rotationUnits::rev, 35, vex::velocityUnits::pct);
+                //open claw
+                claw.rotateFor(directionType::fwd, .2, rotationUnits::rev, 50, velocityUnits::pct);// open elevator 
+                sleepMs(500);
+                // reverse hard coded distance
+                leftMotor.startRotateFor(-.6, vex::rotationUnits::rev, 35, vex::velocityUnits::pct);
+                rightMotor.rotateFor(-.6, vex::rotationUnits::rev, 35, vex::velocityUnits::pct);
+                // reverse hard coded distance
+                floors = floor4;
+                break;
+                
+            case floor4:
+                Start_Point();
+                elevator.rotateFor(3150, vex::rotationUnits::deg, 100, vex::velocityUnits::pct); //lift floor 4 distance 
+                //drive foward
+                leftMotor.startRotateFor(.75, vex::rotationUnits::rev, 35, vex::velocityUnits::pct);
+                rightMotor.rotateFor(.75, vex::rotationUnits::rev, 35, vex::velocityUnits::pct);
+                //open claw
+                claw.rotateFor(directionType::fwd, .3, rotationUnits::rev, 100, velocityUnits::pct); 
+                sleepMs(500);
+                //reverse hard coded distance
+                leftMotor.startRotateFor(-.6, vex::rotationUnits::rev, 50, vex::velocityUnits::pct);
+                rightMotor.rotateFor(-.6, vex::rotationUnits::rev, 50, vex::velocityUnits::pct);
+                break; */
+        }
+        
+        claw.rotateFor(directionType::rev, .25, rotationUnits::rev, 50, velocityUnits::pct); // close claw a little
+        Start_Point();
+        elevator.rotateFor(450, vex::rotationUnits::deg, 100, vex::velocityUnits::pct); //raise elevator to speed bump 
+    }
+}
+ void handleReturnToStart(void){    
+  
+    //drive forward to the white line 
+    leftMotor.startRotateFor(-.5, vex::rotationUnits::rev, 50, vex::velocityUnits::pct);
+    rightMotor.rotateFor(-.5, vex::rotationUnits::rev, 50, vex::velocityUnits::pct);
+    
+    rightMotor.stop();
+    leftMotor.rotateFor(1.9, vex::rotationUnits::rev, 50, vex::velocityUnits::pct);
+  
+    leftMotor.startRotateFor(2.5, vex::rotationUnits::rev, 50, vex::velocityUnits::pct);
+    rightMotor.rotateFor(2.5, vex::rotationUnits::rev, 50, vex::velocityUnits::pct);
+    
+    claw.rotateFor(directionType::fwd, .25, rotationUnits::rev, 50, velocityUnits::pct); // open claw a little
+    Start_Point();
+    elevator.rotateFor(100, vex::rotationUnits::deg, 100, vex::velocityUnits::pct); //raise elevator to speed bump 
+    
+    // drive foward out of the contruction zone 
+    sleepMs(1000);
+    cout<<"sleep"<< endl;
+    currDistance = mySonar.distance(distanceUnits::cm);
+    cout<<currDistance<< endl;
+    while(currDistance>40){ 
+        currDistance = mySonar.distance(distanceUnits::cm); //read ultrasonic sensor; 
+        cout<<currDistance<< endl;
+        leftMotor.spin(directionType::fwd);
+        rightMotor.spin(directionType::fwd);
+    }
+    Move_Left(87); //turn left  
+    
+ //move forward a bit to not sense white line 
+    leftMotor.startRotateFor(3, vex::rotationUnits::rev, 50, vex::velocityUnits::pct);
+    rightMotor.rotateFor(3, vex::rotationUnits::rev, 50, vex::velocityUnits::pct);
+    //drives forward until it senses the the white line parallel to the bakery
+    rightLineSensor = rightSensor.value(vex::percentUnits::pct);
+    leftLineSensor = leftSensor.value(vex::percentUnits::pct);
+
+    while((!(white_line[1] > rightLineSensor))
+            ||
+            (!(rightLineSensor > white_line[0]))
+            &&
+            (!(leftLineSensor > white_line[0]))
+            || 
+            (!(white_line[1] > leftLineSensor))){
+            rightLineSensor = rightSensor.value(vex::percentUnits::pct);
+            cout << "right line sensor value: " << rightLineSensor;
+            leftLineSensor = leftSensor.value(vex::percentUnits::pct);
+            cout << "right line sensor value : " << leftLineSensor;
+        
+            cout<<"found white line"<< endl;
+            leftMotor.spin(fwd, 30, percentUnits::pct);
+            rightMotor.spin(fwd, 30, percentUnits::pct);
+    }
+
+    Move_Right(93); //turn right
+    
+    state = goToBakery; 
+    cout << "Delivered pizza"; 
+   
+}
+
+
+/*Handler needed: in same order 
+for camera: raise claw to bakery height and drive forward 
+for button/ultrasonic: close elevator, lower claw to speed bump height and turn 180 degrees 
+for line sensing switch to drive over speed bump: drive straight at desired velocity to go over speed bump (plan for a number of rotation to be completly in construction zone)
+for line sensing switch to drive to dorm: follow line until switch one is enacted and then turn 90 then drive straight for a set distance, then raise, drive forward more, open elevator drive back and lower
+for button/ultrasonic for delivery of pizza: button is unpressed and the state equals Deliver pizza so then drive back to starting position. */
+
+float rotations(float angle)
+{
+     return GEAR_RATIO * 360 * ((ROBOT_CIRCUMFRANCE / WHEEL_CIRCUMFRANCE) * (angle / 360));
+}
+
+//Moves a certain angle to the left
+void Move_Left(float angle)
+{
+    leftMotor.startRotateFor(-rotations(angle), vex::rotationUnits::deg);
+    rightMotor.rotateFor(rotations(angle), vex::rotationUnits::deg);
+}
+
+//Moves a certain angle to the right
+void Move_Right(float angle)
+{
+    leftMotor.startRotateFor(rotations(angle), vex::rotationUnits::deg);
+    rightMotor.rotateFor(-rotations(angle), vex::rotationUnits::deg);
+}
+
+void Start_Point(void){
+    
+    while(button.pressing() != true)
+    {
+        cout << "elevator moving down" << endl;
+        elevator.spin(directionType::rev, 40, velocityUnits::pct);// move claw
+         
+    }
+    
+    elevator.stop();
+    cout << "at the bottom" << endl;
+}
+
+

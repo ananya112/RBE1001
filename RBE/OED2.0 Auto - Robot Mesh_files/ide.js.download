@@ -1,0 +1,3781 @@
+import { core_cmn } from "./common.js";
+import { db } from "./db.js";
+import { ProgLanguage, ProjectTypeId, getApiType } from "./db_enum.js";
+import { dbgr } from "./debugger.js";
+import { editor } from "./editor/editor.js";
+import { editor_ace } from "./editor/editor_ace.js";
+import { gamepad } from "./gamepad.js";
+import { vexiq_state } from "./interfaces/vexiq_state.js";
+import { interface_code } from "./interface_code.js";
+import { interface_download } from "./interface_download.js";
+import { interface_monitor } from "./interface_monitor.js";
+import { jsbuild } from "./jsbuild.js";
+import { i18n } from "./msg/i18n.js";
+import { msg } from "./msg/messages.js";
+import { prog_language } from "./prog_language/prog_language.js";
+import { core_project } from "./project.js";
+import { rmc_browser } from "./rmc/rmc_browser.js";
+import { rmc } from "./rmc/rmc_core.js";
+import { rmc_install } from "./rmc/rmc_install.js";
+import { rm_protocol } from "./rm_protocol.js";
+import { sound } from "./sound.js";
+import { ui_status } from "./ui_status.js";
+import { util as utilweb } from "./util.js";
+import { util } from "./util_general.js";
+import { download_lib } from "./rmc/download_lib.js";
+import { navigator } from "./navigator.js";
+import { login_and_register } from "./login_and_register.js";
+import { datamanager, CurrentUser, CurrentClassroom } from "./datamanager.js";
+i18n.start();
+export var ide;
+(function (ide) {
+    const LOG = 'project';
+    const LOG_DL = 'download';
+    const LOG_TIME = 'time';
+    const LOG_OPTIONS = 'options';
+    const LOG_ERR = 'error';
+    util.logEnable(LOG_ERR);
+    var _plugin = null;
+    var mimic = null;
+    var mimic_engine = null;
+    var emscripten = null;
+    ide.mimicEngine = null;
+    let tutorial;
+    var _hwiGuids = null;
+    let _compiled = null;
+    let old_image;
+    (function (old_image_1) {
+        function save(guid, image) {
+            if (!guid || !image) {
+                return;
+            }
+            localStorage.setItem("old_guid", guid);
+            localStorage.setItem("old_image", util.bytesToBase64(image));
+        }
+        old_image_1.save = save;
+        function isSaved(guid) {
+            const old_guid = localStorage.getItem("old_guid");
+            return guid && old_guid === guid;
+        }
+        old_image_1.isSaved = isSaved;
+        function get(guid) {
+            const old_guid = localStorage.getItem("old_guid");
+            if (guid && old_guid === guid) {
+                const hex = localStorage.getItem("old_image");
+                if (hex) {
+                    const old_image = util.base64toBytes(hex);
+                    return old_image;
+                }
+            }
+            return null;
+        }
+        old_image_1.get = get;
+    })(old_image || (old_image = {}));
+    let _downloaded = null;
+    var _bCreateProjectWithCode;
+    var _cbCopyConfigToCode;
+    var _cbForceFullDownload;
+    var _selectMimicGraphicsDetail;
+    var _selectPhysicsLevel;
+    var _codeFromDevice = "";
+    var _runtimeError = null;
+    var _tinymceId = "description";
+    var _tinymceDescriptionOptions = {
+        selector: "#description",
+        language: i18n.getLanguage(),
+        plugins: [
+            "lists link charmap",
+            "table contextmenu paste",
+            "textcolor jbimages youtube"
+        ],
+        toolbar: "undo redo | styleselect | fontselect | fontsizeselect | bold italic forecolor backcolor | alignleft aligncenter alignright alignjustify | table | bullist numlist outdent indent | link jbimages youtube",
+        menubar: false,
+        statusbar: false,
+        width: '100%',
+        relative_urls: false,
+        init_instance_callback: null
+    };
+    let _projectOptions = {};
+    var _tinymceDescriptionOptionsStandalone = {
+        selector: "#description",
+        language: i18n.getLanguage(),
+        plugins: [
+            "lists link charmap",
+            "table contextmenu paste",
+            "textcolor"
+        ],
+        toolbar: "undo redo | styleselect | fontselect | fontsizeselect | bold italic forecolor backcolor | alignleft aligncenter alignright alignjustify | table | bullist numlist outdent indent",
+        menubar: false,
+        statusbar: false,
+        width: '100%',
+        relative_urls: false,
+        init_instance_callback: null
+    };
+    const COOKIE_MIMIC_GRAPHICS_DETAIL = "rm_mimic_graphics_detail";
+    const COOKIE_MIMIC_PHYSICS_LEVEL = "rm_mimic_physics_level";
+    const COOKIE_MIMIC_PHYSICS_OUTLINES = "rm_mimic_physics_outlines";
+    async function closeProject() {
+        if (!ide.project) {
+            return;
+        }
+        await stopExecution();
+        saveProjectOptions();
+        saveUiState();
+        disableSaveUiState();
+        if (save_op.canSaveOnUnload()) {
+            await save_op.save();
+        }
+        save_op.autosaveExit();
+        jsbuild.exit();
+        interface_monitor.exit();
+        utilweb.$("#description_tab").empty();
+        if (ide.project.hasMimic()) {
+            utilweb.$("#mimic_tab_header").hide();
+            layout.hideTabIcon(layout.TabId.mimic);
+            utilweb.$("#mimic_tab_list").hide();
+            utilweb.$("#mimicgroups_tab_header").hide();
+            mimic_engine = null;
+            ide.mimicEngine = null;
+            utilweb.$("#mimic-editor-output").empty();
+        }
+        if (ide.project.userCanEditTutorial()) {
+            utilweb.$("#tutorial_tab_header").hide();
+            layout.hideTabIcon(layout.TabId.mimic);
+            utilweb.$("#tutorial_tab_list").hide();
+        }
+        if (tutorial) {
+            utilweb.$("#tutorial_tab_header").hide();
+            utilweb.$("#tutorial_tab_list").hide();
+            utilweb.$("#tutorialEditorToolbar").hide();
+            await tutorial.stopTutorial();
+            tutorial.exit();
+            tutorial = null;
+        }
+        utilweb.$("#bTutorialRestart").hide();
+        if (ide._editor && ide._editor.generatesCode) {
+            exitGeneratedCodePanel();
+        }
+        if (ide._editor) {
+            ide._editor.exit();
+        }
+        ide.project = undefined;
+        _compiled = null;
+        _projectOptions = {};
+        ui_status.clearOutput();
+        ui_status.info("");
+    }
+    ide.closeProject = closeProject;
+    let _loadingProject = false;
+    let _loadnext;
+    async function startTutorialEditUi() {
+        utilweb.$("#tutorial_tab_header").show();
+        layout.showTabIcon(layout.TabId.tutorial);
+        utilweb.$("#tutorial_tab_list").show();
+        utilweb.$("#tutorialEditorToolbar").show();
+        if (!tutorial) {
+            tutorial = await import("./tutorial/tutorial.js");
+            await tutorial.init(ide.project.type.editorType, ide.project.type.id);
+            window.tutorial = tutorial;
+        }
+        if (ide.project.userCanEditTutorial()) {
+            await tutorial.createEditor();
+            await tutorial.editor.start(ide.project.content.tutorial_code, ide.project);
+        }
+        utilweb.$("#tbCopyToRunTutorial").button({
+            icons: { primary: "ui-icon-copy" },
+        }).off("click").click(() => {
+            copy_project_op.doCopy({
+                targetIsLocal: false,
+                targetType: ide.project.type,
+                newProjectName: ide.project.content.project_name + " " + msg.B_RUN_TUTORIAL,
+                copyDescription: true,
+                copyCode: true,
+                copyTutorialCode: false,
+                setTutorialParent: true,
+                copyCodeIsExport: false,
+                copyMimic: true,
+                isTemplate: false,
+                canSubmitMimicRecording: false,
+                deleteSourceProject: false,
+            });
+        });
+    }
+    async function importTutorialOnce() {
+        if (!tutorial) {
+            tutorial = await import("./tutorial/tutorial.js");
+            await tutorial.init(ide.project.type.editorType, ide.project.type.id);
+            window.tutorial = tutorial;
+        }
+    }
+    async function startTutorial(uiRunTutorial) {
+        await importTutorialOnce();
+        if (tutorial.isRunning()) {
+            await tutorial.stopTutorial();
+        }
+        else {
+            if (ide.project.content.arena_score === undefined) {
+                ide.project.content.arena_score = {};
+            }
+            if (ide.project.content.arena_score.success === undefined) {
+                ide.project.content.arena_score.success = false;
+                ide.project.content.arena_score.high_score = 0;
+            }
+            tutorial.runTutorial(ide.project.type.editorType, ide.project.type.id, uiRunTutorial);
+        }
+    }
+    async function startTutorialRunUi() {
+        await importTutorialOnce();
+        const bReset = utilweb.$("#bTutorialRestart");
+        function resetTutorialButtonAction() {
+            bReset.off("click");
+            tutorial.runTutorial(ide.project.type.editorType, ide.project.type.id, undefined, undefined, true)
+                .then(() => {
+                if (utilweb.$("#bTutorialRestart:visible").length > 0) {
+                    bReset.click(resetTutorialButtonAction);
+                }
+            });
+        }
+        bReset.off("click").click(resetTutorialButtonAction);
+        bReset.show();
+    }
+    var _loaded_threejs = false;
+    async function load_three_js() {
+        var first = [];
+        var second = [];
+        first.push(utilweb.getScript("/studio/static/js/threejs109/three.min.js"));
+        second.push(utilweb.getScript("/studio/content/jsx/threejs/stats.js"));
+        second.push(utilweb.getScript("/studio/content/jsx/signals/signals.min.js"));
+        await Promise.all(first);
+        second.push(utilweb.getScript("/studio/content/jsx/threejs/QuickHull.js"));
+        second.push(utilweb.getScript("/studio/content/jsx/threejs/ConvexGeometry.js"));
+        second.push(utilweb.getScript("/studio/content/jsx/threejs/LegacyJSONLoader.js"));
+        second.push(utilweb.getScript("/studio/content/jsx/robotmesh/ThreeExt.js"));
+        await Promise.all(second);
+    }
+    function stopAndOpenNavigator() {
+        event.preventDefault();
+        event.stopPropagation();
+        stopExecution();
+        navigator.open();
+    }
+    ide.stopAndOpenNavigator = stopAndOpenNavigator;
+    async function loadProject(project_id, new_project = false, push_new_state = true, next_from_assignmentid) {
+        util.log(LOG, "loadProject", project_id);
+        if (_loadingProject) {
+            _loadnext = {
+                project_id: project_id,
+                new_project: new_project,
+                push_new_state: push_new_state
+            };
+            return;
+        }
+        _loadnext = null;
+        _loadingProject = true;
+        await closeProject();
+        let everythingToWaitFor = [];
+        let projectContent;
+        try {
+            projectContent = await core_cmn.getProjectContent(project_id, false, next_from_assignmentid);
+        }
+        catch (error) {
+            alert(error);
+            throw error;
+        }
+        if (!projectContent) {
+            if (history.replaceState) {
+                let newUrl = location.href.replace(/studio\/[^?]*/, "studio/");
+                if (history.state === null) {
+                    history.replaceState({ launchpage: true }, "", newUrl);
+                }
+                else {
+                    history.pushState({ launchpage: true }, "", newUrl);
+                }
+            }
+            fillLoginInfo();
+            navigator.open({ launchpage: true });
+            onPageLoadingDone();
+            alert(msg.PROJECT_NOT_FOUND);
+            _loadingProject = false;
+            util.log(LOG, "loadProject done", project_id);
+            if (_loadnext) {
+                return loadProject(_loadnext.project_id, _loadnext.new_project, _loadnext.push_new_state);
+            }
+            else {
+                return;
+            }
+        }
+        ide.project = new core_project.Project(projectContent);
+        await ide.project.start();
+        ide.project.content.ipad = (window.module_ios_rmc_plugin
+            && window.module_ios_rmc_plugin.isInIosApp());
+        utilweb.fillTemplate("title", ide.project.content);
+        utilweb.$('#projectHome, #title-output a').off("click").click(() => stopAndOpenNavigator());
+        everythingToWaitFor.push(fillLoginInfo());
+        utilweb.fillTemplate("editorToolbar", ide.project.content, "#editorToolbar");
+        utilweb.$("#loadingEditor").toggle(ide.project.content.can_show_code);
+        utilweb.$("#editor-output").toggle(ide.project.content.can_show_code);
+        utilweb.$("#sourceCodePrivate").toggle(!ide.project.content.can_show_code);
+        utilweb.updateUrls();
+        document.title = ide.project.content.ui_project_name + " - " + msg.ROBOT_MESH;
+        if (ide.project.hasMimic()) {
+            if (!_loaded_threejs) {
+                _loaded_threejs = true;
+                await load_three_js();
+            }
+            mimic = (await import("./mimic/Mimic.js")).mimic;
+            emscripten = (await import("./emscripten_worker_master.js")).emscripten;
+            emscripten.processDataPacket = processDataPacket;
+            emscripten.processTextOutput = processTextOutput;
+        }
+        if (ide.project.type.mimic_module == "vexv5") {
+            const mod = await import("./interfaces/vexv5_display.js");
+            mod.vexv5_display.init();
+        }
+        let imIsReadonly = !ide.project.content.can_save;
+        if (ide.project.hwInterface != null) {
+            everythingToWaitFor.push(interface_monitor.start(ide.project.hwInterface.getInterfaceMonitor(), ide.project, imIsReadonly));
+        }
+        else {
+            everythingToWaitFor.push(interface_monitor.start(null, ide.project, imIsReadonly));
+        }
+        if (ide.project.content.can_show_code) {
+            const isReadonly = !ide.project.content.can_save;
+            ide._editor = await editor.createEditor(ide.project.type.editorType, isReadonly);
+            if (ide.project.content.user_options) {
+                const theme = ide.project.content.user_options.ace_theme;
+                if (ide._editor && ide._editor.setTheme) {
+                    ide._editor.setTheme(theme);
+                }
+            }
+            await ide._editor.start(ide.project.content.code, ide.project);
+        }
+        if (ide._editor) {
+            utilweb.$("#editor_tab_header").text(ide._editor.editorTabTitle);
+            jQuery("#editorToolbar").show();
+            let showToolbar = ide._editor.initializeToolbar();
+            if (showToolbar) {
+                jQuery("#editorToolbar").children(":not(.ui-widget)").hide();
+            }
+            if (ide.project.content.restrictions && !ide.project.content.restrictions.can_show_editor_toolbar) {
+                showToolbar = false;
+            }
+            jQuery("#editorToolbar").toggle(showToolbar);
+            if (ide._editor.generatesCode) {
+                initializeGeneratedCodePanel();
+            }
+        }
+        var descriptionStart;
+        if (isDescriptionEditable()) {
+            utilweb.$("#description_tab").append("<textarea id='description'>" + ide.project.content.description + "</textarea>");
+            descriptionStart = startTinyMce();
+        }
+        else {
+            utilweb.$("#description_tab").append(DESCRIPTION_READONLY_TAG + ide.project.content.description + "</div>");
+            if (!ide.project.content.can_save) {
+                jQuery("#middle-centerTabList").css("background-color", editor.BACKGROUND_READONLY);
+                jQuery("#middle-centerSection").css("background-color", editor.BACKGROUND_READONLY);
+            }
+            descriptionStart = utilweb.resolvedPromise();
+        }
+        layout.showTabIcon(layout.TabId.description);
+        jQuery("#sPrivacy").val("" + ide.project.content.privacy);
+        if (ide.project.hasMimic()) {
+            jQuery(".mimic-mode").show();
+            jQuery(".non-mimic-mode").hide();
+        }
+        else {
+            jQuery(".mimic-mode").hide();
+            jQuery(".non-mimic-mode").show();
+        }
+        if (ide.project.content.can_download) {
+            if (!ide.project.hasMimic()) {
+                ui_status.info(msg.install.DETECTING_RMC_PLUGIN);
+                build_buttons.onDownloadDisabled(true);
+            }
+            async function startRmcPlugin() {
+                try {
+                    _plugin = await rmc_browser.start();
+                }
+                catch (status) {
+                    if (ide.project.hasMimic()) {
+                        return;
+                    }
+                    showRmcPluginLoadFailedMessage();
+                    return;
+                }
+                if (!ide.project.hasMimic()) {
+                    if (rmc.currentVersion < rmc.Version.Recommended) {
+                        showRmcPluginLoadFailedMessage();
+                    }
+                    else {
+                        ui_status.info("");
+                    }
+                    build_buttons.onDownloadDisabled(false);
+                }
+                rmc_browser.fillPortsDropdown(_plugin);
+                if (new_project && !ide.project.hasMimic()) {
+                    const ifc = ide.project.hwInterface.getInterfaceMonitor();
+                    if (ifc.canDetectSensors()) {
+                        rmc_browser.getSelectedPort(_plugin, ide.project.hwInterface.getDownloader().usbDeviceType).then((portName) => {
+                            if (utilweb.isValidSerialPortName(portName)) {
+                                ifc.detectSensors(portName);
+                            }
+                        });
+                    }
+                }
+            }
+            await startRmcPlugin();
+        }
+        jQuery("#b*").attr("disabled", false);
+        build_buttons.load();
+        if (ide.project.content.can_download || ide.project.content.recording) {
+            if (ide.project.content.recording) {
+                jQuery("#playToolbar").show();
+                utilweb.$("#bStop").show();
+                mimic.setRecording(JSON.parse(ide.project.content.recording));
+            }
+            uiUpdateReplayButton(false);
+        }
+        utilweb.$("#bOptions")
+            .toggle(ide.project.content.restrictions.can_show_project_options);
+        utilweb.$("#options-privacy")
+            .toggle(ide.project.content.restrictions.can_change_privacy);
+        utilweb.$("#options-copy")
+            .toggle(ide.project.content.restrictions.can_copy);
+        utilweb.$("#copyProjectRestrictions")
+            .toggle(ide.project.content.restrictions.can_copy);
+        utilweb.$("#options-featured")
+            .toggle(false);
+        if (ide.project.type.ui_joystickImageName) {
+            var img = "/studio/static/skin/frontend/base/default/images/RobotMesh/" +
+                ide.project.type.ui_joystickImageName;
+            jQuery("#imgJoystickButtons").attr("src", img);
+        }
+        _bCreateProjectWithCode.hide();
+        const bAppendCodeTest = utilweb.$("#bAppendCodeTest");
+        bAppendCodeTest.hide();
+        if (ide._editor && ide._editor instanceof editor_ace.AceEditor && ide.project.hwInterface != null) {
+            const aceEditor = ide._editor;
+            aceEditor.refactorCodeOnWidgetNameChanges(ide.project.getState());
+        }
+        if (ide.project.hwInterface != null) {
+            uncheckConfigToCodeIfCodeDetectPorts();
+            const onConfigChange = () => {
+                uncheckConfigToCodeIfCodeDetectPorts();
+                if (ide._editor &&
+                    shouldCopyConfigToCode()) {
+                    pasteConfigCode(ide._editor);
+                }
+            };
+            ide.project.getState().configChange(onConfigChange);
+            if (new_project && ide.project.hasMimic()) {
+                onConfigChange();
+            }
+        }
+        showGeneratedCode();
+        if (ide._editor
+            && ide.project.type.supportsDebugger
+            && ide.project.content.restrictions.can_use_debugger) {
+            dbgr.enabled = true;
+            const stepByStepMode = ide.project.hasMimic() ? dbgr.StepByStepMode.NoBreak : dbgr.StepByStepMode.Off;
+            dbgr.ui.start(ide._editor, layout.focusDebuggerTab, stepByStepMode);
+        }
+        else {
+            jQuery("#playToolbar .dbgr").hide();
+            jQuery("#speedSlider").hide();
+            dbgr.enabled = false;
+            jQuery("#debugger_tab_header").hide();
+        }
+        layout.reinitializeLayout();
+        jQuery("#projectWrap").show();
+        let mimicLoadDone = null;
+        if (ide.project.hasMimic()) {
+            mimic_engine = (await import("./mimic/mimic_engine.js")).mimic_engine;
+            ide.mimicEngine = await mimic_engine.create(ide.project.type.mimic_module);
+            loadMimicOptions();
+            utilweb.$("#mimic_tab_header").show();
+            layout.showTabIcon(layout.TabId.mimic);
+            utilweb.$("#mimic_tab_list").show();
+            utilweb.$("#mimicgroups_tab_header").toggle(ide.mimicEngine.hasGroupsTab());
+            if (!ide.mimicEngine.hasConnectButton()) {
+                utilweb.$(interface_monitor.ui.ID_CONNECT).hide();
+                jQuery("#tool-connect").hide();
+            }
+            await ide.mimicEngine.initialize(ide.project.content.arena, [ide.project]);
+            mimicLoadDone = ide.mimicEngine.onAllLoaded();
+            layout.resizeMimicGroupsTab();
+        }
+        if (ide.project.hasEditableTutorial()) {
+            await startTutorialEditUi();
+        }
+        else {
+            utilweb.$("#tutorialEditorToolbar").hide();
+        }
+        if (ide.project.hasRunnableTutorial()) {
+            await startTutorialRunUi();
+        }
+        const canAddTutorial = utilweb.isFuture() && ide.project.userCanEditTutorial() && !ide.project.hasEditableTutorial() && ide.project.content.projecttype_id != ProjectTypeId.Arena;
+        const lbAddTutorial = utilweb.$("#projectOptions #lbAddTutorial");
+        lbAddTutorial.toggle(canAddTutorial);
+        async function addTutorial() {
+            ide.project.content.tutorial_code = `/*__BLOCKLY__
+            <xml xmlns="https://developers.google.com/blockly/xml"><block type="tut_chapter_fn" id="(6C)GTb|v/ZsFs#aN?gh" x="0" y="0"><field name="NAME">setup</field><statement name="STACK"><block type="tut_method_block_all" id="]tp4Cf8YOD:@XQe#LfSd"><field name="METHOD">setEditable(false)|setMovable(false)|setDeletable(false)</field></block></statement></block><block type="tut_chapter_fn" id="[$Q4x$ep:*;Q$DV9DBP$" x="0" y="102"><field name="NAME">1</field></block><block type="tut_chapter_fn" id="CY%#8MZb!z!yz)BOa6," x="0" y="204"><field name="NAME">final</field><statement name="STACK"><block type="tut_complete" id="--4,s7R5uM(I1HwYs%6q"><field name="ALLOW_CONTINUE">false</field><field name="SHOW_NEXT">true</field><value name="MESSAGE"><shadow type="text" id="xC{ezbrE40dx$U2=n-^U"><field name="TEXT">Message</field></shadow></value></block></statement></block></xml>
+            */
+            
+            async function main() {
+            async function setup() {
+                for (let _item of tut.get_all_blocks()) {_item.setEditable(false);
+                _item.setMovable(false);
+                _item.setDeletable(false);
+                }}
+            
+            async function my_1() {
+            }
+            
+            async function final() {
+              await tut.complete_tutorial('Message', false, true);
+            }
+            
+            await tut.run_chapters([
+              {num: -3, fn: final},
+              {num: -2, fn: setup},
+              {num: 1, fn: my_1},
+            ]);
+            
+            } // end main`;
+            await startTutorialEditUi();
+            if (tutorial && tutorial.editor && tutorial.editor.initializeAfterLayout) {
+                await tutorial.editor.initializeAfterLayout();
+            }
+            if (utilweb.isTestMode("tutorial") && tutorial) {
+                tutorial.test.init();
+            }
+            lbAddTutorial.hide();
+            const defaultTutorialRestrictions = {
+                can_change_description: false,
+                can_change_mimic: false,
+                can_change_privacy: false,
+                can_copy: false,
+                can_show_east_pane: false,
+                can_show_project_options: false,
+                can_use_debugger: false,
+                can_show_editor_toolbar: true,
+            };
+            utilweb.updateUiList("#restrictionsList", core_project.RESTRICTION_NAMES, (name, uiItem) => {
+                const label = msg.E_PROJECT_RESTRICTIONS[name];
+                utilweb.$(".text", uiItem).text(label);
+                const isChecked = defaultTutorialRestrictions[name];
+                const cb = utilweb.$("input[type=checkbox]", uiItem);
+                cb.prop("id", "cb_" + name);
+                cb.prop("checked", isChecked);
+            });
+        }
+        const bAddTutorial = utilweb.$("#projectOptions #bAddTutorial");
+        bAddTutorial.off("click");
+        if (canAddTutorial) {
+            bAddTutorial.click(() => addTutorial());
+        }
+        if (utilweb.isTestMode("tutorial") && tutorial) {
+            tutorial.test.init();
+        }
+        async function afterMimicLoadDone() {
+            await mimicLoadDone;
+            save_op.autosaveStart();
+            if (ide.project.hwInterface != null) {
+                jsbuild.initialize(ide.project);
+            }
+        }
+        everythingToWaitFor.push(afterMimicLoadDone());
+        async function descriptionFinish() {
+            await descriptionStart;
+        }
+        everythingToWaitFor.push(descriptionFinish());
+        utilweb.updateUrls();
+        if (ide.project.content.can_save) {
+            save_op.init(ide.project.content.code, ide.project.content.tutorial_code, ide.project.content.tutorial_run_state, ide.project.content.description, ide.project.content.model, ide.project.content.arena_score, ide.project.content.metrics);
+            if (ide.project.hasMimic()) {
+                save_op.loadingMimic();
+            }
+            else {
+                save_op.autosaveStart();
+            }
+            if (utilweb.isTestMode()) {
+                save_op.autosaveStop(false);
+            }
+        }
+        let newUrl = location.href;
+        project_id = projectContent.project_id;
+        if (newUrl.match(/studio\/project.html/)) {
+            if (newUrl.match(/studio\/project.html\?id=[0-9a-f]{24}/)) {
+                newUrl = newUrl.replace(/studio\/project.html\?id=[0-9a-f]{24}/, "studio/project.html?id=" + project_id);
+            }
+            else {
+                newUrl = newUrl.replace(/studio\/project.html/, "studio/project.html?id=" + project_id);
+            }
+        }
+        else {
+            if (newUrl.match(/studio\/[0-9a-f]{24}/)) {
+                newUrl = newUrl.replace(/studio\/[0-9a-f]{24}/, "studio/" + project_id.toString());
+            }
+            else if (newUrl.match(/studio\/[0-9]{1,6}/)) {
+                newUrl = newUrl.replace(/studio\/[0-9]{1,6}/, "studio/" + project_id);
+            }
+            else {
+                newUrl = newUrl.replace(/studio\/?/, "studio/" + project_id.toString());
+            }
+        }
+        if (push_new_state) {
+            if (history.replaceState) {
+                if (history.state != undefined)
+                    window.history.pushState({ project_id: project_id }, "", newUrl);
+                else
+                    history.replaceState({ project_id: project_id }, "", newUrl);
+            }
+        }
+        utilweb.fillTemplate("helplink", {
+            url: utilweb.getAbsUrl("studio/content/docs/"
+                + ide.project.type.source_path + "/"
+                + msg.API_DOCS_LOC +
+                "/html/index.html")
+        });
+        await Promise.all(everythingToWaitFor);
+        await initializeProjectOptions();
+        if (ide._editor && ide._editor.initializeAfterLayout) {
+            await ide._editor.initializeAfterLayout();
+        }
+        if (tutorial && tutorial.editor && tutorial.editor.initializeAfterLayout) {
+            await tutorial.editor.initializeAfterLayout();
+        }
+        _loadingProject = false;
+        util.log(LOG, "loadProject done", project_id);
+        if (_loadnext) {
+            return loadProject(_loadnext.project_id, _loadnext.new_project, _loadnext.push_new_state);
+        }
+        enableSaveUiState();
+        if (ide.project.hasRunnableTutorial()) {
+            utilweb.hideLightbox(".lightbox");
+            await startTutorial();
+        }
+    }
+    ide.loadProject = loadProject;
+    let loginContent;
+    async function fillLoginInfo(prefetch) {
+        if (prefetch) {
+            loginContent = prefetch;
+            navigator.updateList();
+        }
+        else {
+            loginContent = JSON.parse(await CurrentUser.getLoginContent());
+        }
+        utilweb.fillTemplate("login", loginContent, ".login-output");
+        jQuery(".logoutLink").click((event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            logout();
+        });
+        jQuery(".loginLink, .registerLink").click((event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            login_and_register.open();
+        });
+        jQuery(".teacherLink").click(openTeacherDialog);
+        jQuery(".bRmcInstall").click(() => {
+            rmc_install.openDialog();
+        });
+        i18n.ui.hookupChangeLanguage();
+    }
+    ide.fillLoginInfo = fillLoginInfo;
+    async function logout() {
+        await closeWithoutLoading();
+        let response = await CurrentUser.logoutUserOnepage();
+        let newUrl = removePIDfromURL();
+        if (newUrl) {
+            if (history.replaceState) {
+                history.pushState({ launchpage: true }, "Robot Mesh Studio", newUrl);
+            }
+        }
+        fillLoginInfo(response);
+    }
+    ide.logout = logout;
+    function removePIDfromURL() {
+        let newUrl = location.href;
+        if (newUrl.match(/studio\/[0-9a-f]{24}/)) {
+            newUrl = newUrl.replace(/studio\/[0-9a-f]{24}/, "studio/");
+            return newUrl;
+        }
+        return null;
+    }
+    async function closeWithoutLoading(replaceInsteadOfPush) {
+        navigator.open({ launchpage: true });
+        await closeProject();
+        let newUrl = removePIDfromURL();
+        if (newUrl) {
+            if (history.replaceState) {
+                if (!replaceInsteadOfPush) {
+                    history.pushState({ launchpage: true }, "Robot Mesh Studio", newUrl);
+                }
+                else {
+                    history.replaceState({ launchpage: true }, "Robot Mesh Studio", newUrl);
+                }
+            }
+        }
+    }
+    ide.closeWithoutLoading = closeWithoutLoading;
+    jQuery.noConflict();
+    jQuery(document).ready(() => documentReady());
+    async function documentReady() {
+        jQuery("#b*").attr("disabled", true);
+        if (document.location.hostname.indexOf('robotc.com.cn') >= 0) {
+            jQuery('#projectAutosaveStatus').after('<div id="rms-icp1"><br/><a href="http://www.miitbeian.gov.cn/">陕ICP备13009259号-1</a></div>');
+            jQuery('#headerMessage').after('<div id="rms-icp2"><a href="http://www.miitbeian.gov.cn/">陕ICP备13009259号-1</a></div>');
+        }
+        if (document.location.pathname.indexOf('/game') >= 0) {
+            return;
+        }
+        if (document.location.pathname.indexOf('/match') >= 0) {
+            return;
+        }
+        ace.config.set("basePath", "/studio/static/js/ace-builds/src-min-noconflict");
+        utilweb.keepFutureParamInLinks();
+        if (utilweb.isFuture()) {
+            jQuery(".courseElement").removeClass("courseElement");
+        }
+        utilweb.fillTemplate("options", {});
+        layout.initializeLayout();
+        interface_download.output = (text) => ui_status.appendOutput(text + "\n");
+        interface_download.outputDone = (text) => ui_status.done(text);
+        interface_download.outputInfo = (text) => ui_status.info(text);
+        utilweb.$("#bStop").click(() => stopExecution());
+        utilweb.$("#bReplay").click(() => replayMimic());
+        utilweb.$("#bReplaySubmit").click(() => submitMimicRecording());
+        _cbCopyConfigToCode = jQuery("#cbCopyConfigToCode");
+        _cbCopyConfigToCode.change(() => {
+            if (ide._editor && shouldCopyConfigToCode()) {
+                pasteConfigCode(ide._editor);
+            }
+        });
+        _cbForceFullDownload = jQuery("#cbForceFullDownload");
+        utilweb.$("#bOptions").click(projectOptions);
+        utilweb.$("#bCopyProject").click(() => {
+            projectOptionsOk();
+            copy_project_op.openDialog();
+        });
+        jQuery("#sPrivacy").change(privacyUI);
+        jQuery("#bFeatured").click(featuredUI);
+        jQuery("#bRefreshPorts").click(refreshPorts);
+        jQuery("#bStartFirmwareUpdate").click(() => {
+            utilweb.hideLightbox("#projectOptions");
+            interface_monitor.firmware_update.showStartUpdatePrompt();
+        });
+        utilweb.$("#bProjectOptionsOk").click(() => projectOptionsOk());
+        build_buttons.init();
+        dbgr.heap.start();
+        _bCreateProjectWithCode = jQuery("#bCreateProjectWithCode");
+        _bCreateProjectWithCode.click(createProjectWithCode);
+        const bSaveOutput = utilweb.$(ui_status.ID_B_SAVE_TO_FILE);
+        bSaveOutput.click(() => {
+            const text = utilweb.$(ui_status.ID_OUTPUT).text();
+            const now = new Date();
+            const projectName = ide.project.content.project_name.replace(/[^\u0400-\u04FFa-zA-Z0-9]/g, '_');
+            const filename = util.format(msg.F_FILENAME_OUTPUT, [projectName,
+                util.padLeft(now.getFullYear(), 4, '0'),
+                util.padLeft(now.getMonth(), 2, '0'),
+                util.padLeft(now.getDate(), 2, '0'),
+                util.padLeft(now.getHours(), 2, '0'),
+                util.padLeft(now.getMinutes(), 2, '0'),
+                util.padLeft(now.getSeconds(), 2, '0')]);
+            utilweb.saveTextFile(text, filename);
+        });
+        const bAppendCodeTest = utilweb.$("#bAppendCodeTest");
+        bAppendCodeTest.hide();
+        if (utilweb.isTestMode("buttons")) {
+            bAppendCodeTest.click(() => {
+                _bCreateProjectWithCode.show();
+                var code = "print 'append code test'";
+                _codeFromDevice += code + "\n";
+                ui_status.appendOutput(code + "\n", _addCodeSpan);
+            });
+            bAppendCodeTest.show();
+            function updateModel(buttonIndex, isMouseDown) {
+                const st = ide.project.getState();
+                const w = st.getWidgetByIndex(vexiq_state.FACE_BUTTON_INDEX + buttonIndex);
+                w.setValue(isMouseDown);
+            }
+            jQuery("#bFaceButtonCheck")
+                .mousedown(() => updateModel(0, true))
+                .mouseup(() => updateModel(0, false))
+                .show();
+            jQuery("#bFaceButtonUp")
+                .mousedown(() => updateModel(1, true))
+                .mouseup(() => updateModel(1, false))
+                .show();
+            jQuery("#bFaceButtonDown")
+                .mousedown(() => updateModel(2, true))
+                .mouseup(() => updateModel(2, false))
+                .show();
+            function updateModelByPort(zport, zportOnAdi, value) {
+                const st = ide.project.getState();
+                let w = st.getWidgetByPort(zport, zportOnAdi);
+                if (!w) {
+                    w = st.getWidgetByPort(zport);
+                }
+                w.setValue(value);
+            }
+            jQuery("#bTestDigitalInput")
+                .mousedown(() => updateModelByPort(0, 0, true))
+                .mouseup(() => updateModelByPort(0, 0, false))
+                .show();
+            let highlightOn = false;
+            jQuery("#bHighlight").click(() => {
+                if (highlightOn) {
+                    ide._editor.highlightLines([]);
+                    highlightOn = false;
+                }
+                else {
+                    let i = 7;
+                    ide._editor.highlightLines([
+                        { lineno: i++, type: editor.LineHighlightType.Paused },
+                        { lineno: i++, type: editor.LineHighlightType.PausedInactive },
+                        { lineno: i++, type: editor.LineHighlightType.StepByStep },
+                        { lineno: i++, type: editor.LineHighlightType.Selected },
+                        { lineno: i++, type: editor.LineHighlightType.FadeOut },
+                    ], false);
+                    highlightOn = true;
+                }
+            }).show();
+            jQuery("#bToggleReadonly").click(() => {
+                if (ide._editor) {
+                    ide._editor.setReadOnly(!ide._editor.getReadOnly());
+                }
+            }).show();
+            jQuery("#bSaveThumbnail")
+                .click(() => saveMimicThumbnail(ide.project.content.project_id))
+                .show();
+        }
+        initializeMimicOptionsUi();
+        utilweb.$("#codegen_tab_header").click(() => { showGeneratedCode(); });
+        let newUrl = location.href;
+        const defaultlicense = utilweb.getUrlParameter("license");
+        newUrl = newUrl.replace(/\?license.*?&(.*)/, "?$1");
+        newUrl = newUrl.replace(/&license.*?&(.*)/, "&$1");
+        newUrl = newUrl.replace(/(\?|&)license.*?$/, "");
+        if (defaultlicense)
+            CurrentUser.defaultlicense = defaultlicense;
+        const open_teacher = utilweb.getUrlParameter("teacher") !== undefined;
+        newUrl = newUrl.replace(/\?teacher.*?&(.*)/, "?$1");
+        newUrl = newUrl.replace(/&teacher.*?&(.*)/, "&$1");
+        newUrl = newUrl.replace(/(\?|&)teacher.*?$/, "");
+        const open_classroom = utilweb.getUrlParameter("class") !== undefined;
+        newUrl = newUrl.replace(/\?class.*?&(.*)/, "?$1");
+        newUrl = newUrl.replace(/&class.*?&(.*)/, "&$1");
+        newUrl = newUrl.replace(/(\?|&)class.*?$/, "");
+        const class_link = utilweb.getUrlParameter("link");
+        newUrl = newUrl.replace(/\?link.*?&(.*)/, "?$1");
+        newUrl = newUrl.replace(/&link.*?&(.*)/, "&$1");
+        newUrl = newUrl.replace(/(\?|&)link.*?$/, "");
+        if (open_classroom) {
+            CurrentClassroom.getClassroomByLink(class_link);
+        }
+        var pid = getProjectIdFromUri();
+        const new_project = utilweb.getUrlParameter("newproject") !== undefined;
+        async function popStateHandler(e) {
+            if (e.state && e.state.project_id) {
+                utilweb.showLightbox("#loadingBox", { modal: true });
+                await loadProject(e.state.project_id, false, false);
+                utilweb.hideLightbox(".lightbox");
+            }
+            else if (e.state && e.state.launchpage) {
+                navigator.open({ launchpage: true });
+            }
+            else {
+            }
+        }
+        window.onpopstate = popStateHandler;
+        newUrl = newUrl.replace(/\?newproject.*?&(.*)/, "?$1");
+        newUrl = newUrl.replace(/&newproject.*?&(.*)/, "&$1");
+        newUrl = newUrl.replace(/(\?|&)newproject.*?$/, "");
+        if (pid) {
+            await loadProject(pid, new_project, history.state == undefined);
+        }
+        else {
+            if (history.replaceState) {
+                history.replaceState({ launchpage: true }, "", newUrl);
+            }
+            var getting_login_info = fillLoginInfo();
+        }
+        if (utilweb.isTestMode()) {
+            jQuery("#bSave").show().click(saveUI);
+        }
+        if (utilweb.isFuture()) {
+            const Course = (await import("./course.js")).course;
+            jQuery("#bCreateCourse").show().click(Course.create);
+            jQuery("#bAddToCourse").show().click(Course.add);
+        }
+        navigator.init(null);
+        if (utilweb.isTestMode("no-pss")) {
+            download_lib.test_disablePSS = true;
+        }
+        if (utilweb.isStandaloneMode()) {
+            jQuery("#rmcPluginDialogLink").remove();
+        }
+        else {
+            rmc_install.openDialogIfUrlParamPresent();
+            jQuery("#bRmcInstallDialog")
+                .click(() => {
+                utilweb.hideLightbox('#projectOptions');
+                if (!ide.project.hwInterface.name) {
+                    throw new Error("arg: project.hwInterface.name missing");
+                }
+                rmc_install.openDialog(false, ide.project.hwInterface.name);
+            });
+        }
+        if (!window.onbeforeunload) {
+            window.onbeforeunload = onBeforeUnload;
+        }
+        if (pid == null) {
+            if (getting_login_info) {
+                await getting_login_info;
+            }
+            if (!open_classroom || open_teacher || CurrentUser.loginstatus.logged_in) {
+                navigator.open({ launchpage: true });
+            }
+            if (open_teacher) {
+                if (CurrentUser.loginstatus.logged_in) {
+                    openTeacherDialog();
+                }
+                else {
+                    login_and_register.open();
+                }
+            }
+            else if (open_classroom) {
+                openClassroomLoginDialog();
+            }
+            onPageLoadingDone();
+        }
+    }
+    let _classroomlogin;
+    async function openClassroomLoginDialog() {
+        if (!_classroomlogin) {
+            _classroomlogin = (await import("./classroom_embed.js")).classroom;
+        }
+        _classroomlogin.open();
+    }
+    function onPageLoadingDone() {
+        jQuery("#pageLoading").remove();
+        jQuery("#projectHeader").css({ visibility: "visible" });
+        jQuery("#projectWrap").css({ visibility: "visible" });
+    }
+    let _teacher;
+    async function openTeacherDialog(event) {
+        if (event) {
+            event.stopPropagation();
+            event.preventDefault();
+        }
+        if (!_teacher) {
+            _teacher = (await import("./teacher_embed.js")).teacher;
+        }
+        _teacher.open();
+    }
+    ide.openTeacherDialog = openTeacherDialog;
+    function getProjectIdFromUri() {
+        var vars = utilweb.parseUriQuery(document.location.toString());
+        var pidStr = vars["id"];
+        if (pidStr === undefined) {
+            pidStr = document.location.pathname;
+            if (pidStr.endsWith("/")) {
+                pidStr = pidStr.substr(0, pidStr.length - 1);
+            }
+            var lastSlash = pidStr.lastIndexOf('/');
+            if (lastSlash == 0) {
+                return null;
+            }
+            pidStr = pidStr.substr(lastSlash + 1);
+        }
+        if (pidStr == "project.html") {
+            return null;
+        }
+        return pidStr;
+    }
+    function startTinyMce() {
+        tinyMCE.baseURL = utilweb.getAbsUrl("/studio/static/js/tinymce");
+        tinyMCE.suffix = ".min";
+        if (utilweb.isStandaloneMode()) {
+            _tinymceDescriptionOptions = _tinymceDescriptionOptionsStandalone;
+        }
+        else {
+        }
+        var dfd = jQuery.Deferred();
+        _tinymceDescriptionOptions.init_instance_callback = () => {
+            tinyMCE.activeEditor.isNotDirty = true;
+            dfd.resolve();
+        };
+        tinyMCE.init(_tinymceDescriptionOptions);
+        return dfd.promise();
+    }
+    const DESCRIPTION_READONLY_TAG = '<div id="description" class="mce-content-readonly">';
+    function getTinyMceContent() {
+        var mce = tinyMCE.get(_tinymceId);
+        if (mce) {
+            return mce.getContent();
+        }
+        else {
+            return jQuery("#" + _tinymceId).html();
+        }
+    }
+    function isDescriptionEditable() {
+        return (ide.project.content.can_save && ide.project.content.restrictions.can_change_description && !utilweb.isChromeApp());
+    }
+    function showRmcPluginLoadFailedMessage() {
+        const status = rmc_browser.getCurrentStatus();
+        function statusInstall(message) {
+            ui_status.warn(message + " <a onclick='eh_rmc_install.openDialog()' href='javascript:void(0)'>" + msg.PLEASE_INSTALL_IT + "</a>");
+        }
+        switch (status) {
+            case rmc.Status.FailNotInstalled:
+            case rmc.Status.FailNativeHostNotInstalled:
+                statusInstall(msg.ROBOT_MESH_NEEDS_A_BROWSER_PLUGIN);
+                break;
+            case rmc.Status.FailNotCorrectVersion:
+            case rmc.Status.FailNativeHostNotCorrectVersion:
+                statusInstall(msg.ROBOT_MESH_NEEDS_A_NEWER_VERSION_OF_BROWSER_PLUGIN);
+                break;
+            case rmc.Status.FailNotSupported:
+                ui_status.fail(msg.SORRY_PLUGIN_DOES_NOT_SUPPORT_BROWSER);
+                break;
+            case rmc.Status.OK:
+                if (rmc.currentVersion != rmc.Version.Recommended) {
+                    statusInstall(msg.NEWER_VERSION_OF_BROWSER_PLUGIN_RECOMMENDED);
+                }
+                break;
+        }
+    }
+    ide.showRmcPluginLoadFailedMessage = showRmcPluginLoadFailedMessage;
+    function uiUpdateReplayButton(programRunning) {
+        if (!ide.project.hasMimic()) {
+            utilweb.$("#bReplay").hide();
+            utilweb.$("#bReplaySubmit").hide();
+            return;
+        }
+        const isEnabled = !programRunning && mimic.getRecording();
+        utilweb.$("#bReplay").prop("disabled", !isEnabled);
+        if (ide.project.content.can_submit_mimic_recording) {
+            utilweb.$("#bReplaySubmit").prop("disabled", !isEnabled);
+        }
+        else {
+            utilweb.$("#bReplaySubmit").hide();
+        }
+    }
+    ide.uiUpdateReplayButton = uiUpdateReplayButton;
+    function saveMimicThumbnail(projectId) {
+        const b64data = mimic.screenshot(140, 140);
+        datamanager.saveMimicThumbnail({
+            project_id: projectId,
+            thumb: b64data,
+        });
+    }
+    let _downloadDisabled = false;
+    let _debuggerActive = false;
+    let build_buttons;
+    (function (build_buttons) {
+        const P = "#playToolbar ";
+        const CL_BUTTON = P + ".buildButton";
+        const B_PLAY = P + "#bPlay";
+        const B_PLAY_NO_DBG = P + "#bPlayNoDbg";
+        const B_BUILD_DOWNLOAD = P + "#bBuildDownload";
+        const B_BUILD_ONLY = P + "#bBuildOnly";
+        let showPlayOption;
+        let showPlayNoDbgOption;
+        let showBuildOnlyOption;
+        let showBuildDownloadOption;
+        let menuOpened;
+        let bgCss = null;
+        function onDebuggerActive(isActive) {
+            _debuggerActive = isActive;
+            utilweb.$(B_PLAY).prop('disabled', _debuggerActive || _downloadDisabled);
+        }
+        build_buttons.onDebuggerActive = onDebuggerActive;
+        function onDownloadDisabled(disabled) {
+            _downloadDisabled = disabled;
+            utilweb.$(B_PLAY).prop('disabled', _debuggerActive || _downloadDisabled);
+            utilweb.$(B_PLAY_NO_DBG).prop('disabled', _downloadDisabled);
+            utilweb.$(B_BUILD_DOWNLOAD).prop('disabled', _downloadDisabled);
+        }
+        build_buttons.onDownloadDisabled = onDownloadDisabled;
+        function handleChange() {
+            const uiSelect = utilweb.$(P + "#buildButtonSelect");
+            const selectedId = uiSelect.val();
+            utilweb.$(CL_BUTTON).hide();
+            utilweb.$("#" + selectedId).show();
+            const showSpeedSlider = (selectedId === "bPlay"
+                && ide.project.type.supportsDebugger
+                && ide.project.content.restrictions.can_use_debugger);
+            utilweb.$(P + "#speedSlider").toggle(showSpeedSlider);
+        }
+        function init() {
+            const bPlayNoDbg = utilweb.$(B_PLAY_NO_DBG);
+            const bBuildOnly = utilweb.$(B_BUILD_ONLY);
+            const bBuildDownload = utilweb.$(B_BUILD_DOWNLOAD);
+            bPlayNoDbg.click(() => {
+                dbgr.enabled = false;
+                ide.runProgram();
+            });
+            bBuildOnly.click(() => {
+                const args = { buildOnly: true };
+                buildUI(args);
+            });
+            bBuildDownload.click(() => {
+                const args = { downloadOnly: true };
+                buildUI(args);
+            });
+            const uiSelect = utilweb.$(P + "#buildButtonSelect");
+            menuOpened = false;
+            uiSelect.on("selectmenuopen", () => {
+                if (menuOpened) {
+                    return;
+                }
+                menuOpened = true;
+                const optPlayAlt = utilweb.$("#buildButtonSelect-menu .ui-menu-item:nth-child(1)");
+                const optPlayNoDbgAlt = utilweb.$("#buildButtonSelect-menu .ui-menu-item:nth-child(2)");
+                const optBuildOnlyAlt = utilweb.$("#buildButtonSelect-menu .ui-menu-item:nth-child(3)");
+                const optBuildDownloadAlt = utilweb.$("#buildButtonSelect-menu .ui-menu-item:nth-child(4)");
+                optPlayAlt.toggle(showPlayOption);
+                optPlayNoDbgAlt.toggle(showPlayNoDbgOption);
+                optBuildDownloadAlt.toggle(showBuildDownloadOption);
+                optBuildOnlyAlt.toggle(showBuildOnlyOption);
+                if (bgCss != null) {
+                    optBuildDownloadAlt.css(bgCss);
+                }
+            });
+            uiSelect.on("selectmenuchange", () => handleChange());
+            uiSelect.selectmenu();
+            utilweb.$(P).show();
+        }
+        build_buttons.init = init;
+        function load() {
+            const bPlay = utilweb.$(B_PLAY);
+            const bPlayNoDbg = utilweb.$(B_PLAY_NO_DBG);
+            const bBuildDownload = utilweb.$(B_BUILD_DOWNLOAD);
+            bgCss = null;
+            if (ide.project.hwInterface != null) {
+                const icon = utilweb.getResourceUrl("toolbar/Download_" + ide.project.hwInterface.name + ".png");
+                bgCss = { "background-image": "url(" + icon + ")" };
+                bBuildDownload.css(bgCss);
+            }
+            utilweb.$(CL_BUTTON).hide();
+            bPlay.show();
+            utilweb.$(P + "#buildButtonSelect").hide();
+            if (!ide.project.content.can_download) {
+                bPlayNoDbg.show();
+                utilweb.$(P + "#bStop").hide();
+                return;
+            }
+            utilweb.$(P + "#bStop").show();
+            const pt = db.getProjectType(ide.project.content.projecttype_id);
+            if (ide.project.type.supportsDebugger
+                && ide.project.content.restrictions.can_use_debugger) {
+                showPlayOption = true;
+                showPlayNoDbgOption = !ide.project.hasMimic();
+            }
+            else {
+                showPlayOption = false;
+                showPlayNoDbgOption = true;
+                bPlayNoDbg.text(msg.RUN_NO_DBG_SUPPORT);
+                utilweb.$(P + "#optPlayNoDbg").text(msg.TT_RUN_NO_DBG_SUPPORT);
+            }
+            showBuildOnlyOption = (pt.progLanguage === ProgLanguage.Python
+                || pt.progLanguage === ProgLanguage.Python3
+                || pt.progLanguage === ProgLanguage.PythonB
+                || pt.progLanguage === ProgLanguage.C
+                || pt.progLanguage === ProgLanguage.Cpp
+                || pt.progLanguage === ProgLanguage.JavaScript);
+            showBuildDownloadOption = true;
+            utilweb.$("#optBuildDownload").text(ide.project.hasMimic() ? msg.TT_DOWNLOAD_TO_ROBOT : msg.TT_DOWNLOAD);
+            const uiSelectAlt = utilweb.$("#buildButtonSelect-button");
+            let numOptions = 0;
+            numOptions += showPlayOption ? 1 : 0;
+            numOptions += showPlayNoDbgOption ? 1 : 0;
+            numOptions += showBuildDownloadOption ? 1 : 0;
+            numOptions += showBuildOnlyOption ? 1 : 0;
+            uiSelectAlt.toggle(numOptions > 1);
+            const uiSelect = utilweb.$(P + "#buildButtonSelect");
+            if (showPlayOption) {
+                uiSelect.val(uiSelect.find(":nth-child(1)").val());
+            }
+            else if (showPlayNoDbgOption) {
+                uiSelect.val(uiSelect.find(":nth-child(2)").val());
+            }
+            else if (showBuildOnlyOption) {
+                uiSelect.val(uiSelect.find(":nth-child(3)").val());
+            }
+            else if (showBuildDownloadOption) {
+                uiSelect.val(uiSelect.find(":nth-child(4)").val());
+            }
+            handleChange();
+            menuOpened = false;
+        }
+        build_buttons.load = load;
+    })(build_buttons = ide.build_buttons || (ide.build_buttons = {}));
+    function onBeforeUnload() {
+        if (utilweb.isTestMode()) {
+            return "Test mode: autosave not active, document was not saved";
+        }
+        if (!ide.project) {
+            return;
+        }
+        if (!save_op.canSaveOnUnload()) {
+            mimic.poisoned = true;
+            return;
+        }
+        save_op.save(false);
+    }
+    ide.onBeforeUnload = onBeforeUnload;
+    function useJsBuildCompile() {
+        if (utilweb.isTestMode("server_compile")) {
+            return false;
+        }
+        if (ide.project.type.compile_type === "server"
+            && !window.nwjsIsActive) {
+            return false;
+        }
+        if (typeof (jsbuild) === "undefined") {
+            return false;
+        }
+        return true;
+    }
+    function loadMimicOptions() {
+        const v = utilweb.cookie(COOKIE_MIMIC_GRAPHICS_DETAIL);
+        ide.mimicEngine.set_graphicsDetail(parseInt(v));
+        _selectMimicGraphicsDetail[0].selectedIndex =
+            ide.mimicEngine.get_graphicsDetail();
+        const v1 = utilweb.cookie(COOKIE_MIMIC_PHYSICS_LEVEL);
+        ide.mimicEngine.set_physicsLevel(parseInt(v1));
+        _selectPhysicsLevel[0].selectedIndex =
+            ide.mimicEngine.get_physicsLevel();
+        const v2 = utilweb.cookie(COOKIE_MIMIC_PHYSICS_OUTLINES);
+        const showPhysicsOutlines = (v2 === "true");
+        ide._cbMimicPhysicsOutlines.prop("checked", showPhysicsOutlines);
+        refreshArenas(ide.project.content.arena_project_id);
+    }
+    function initializeMimicOptionsUi() {
+        ide._cbMimicPhysicsOutlines = utilweb.$("#cbMimicPhysicsOutlines");
+        ide._cbMimicPhysicsOutlines.change(() => {
+            const showPhysicsOutlines = ide._cbMimicPhysicsOutlines.is(":checked");
+            const v = showPhysicsOutlines ? "true" : "false";
+            utilweb.cookie(COOKIE_MIMIC_PHYSICS_OUTLINES, v);
+        });
+        _selectMimicGraphicsDetail = utilweb.$("#selectMimicDetail");
+        _selectMimicGraphicsDetail.change(() => {
+            const detail = _selectMimicGraphicsDetail[0].selectedIndex;
+            mimic.set_graphicsDetail(detail);
+            utilweb.cookie(COOKIE_MIMIC_GRAPHICS_DETAIL, "" + detail);
+            mimic.set_animateFrame(true);
+        });
+        _selectPhysicsLevel = utilweb.$("#selectMimicPhysicsLevel");
+        _selectPhysicsLevel.change(() => {
+            const level = _selectPhysicsLevel[0].selectedIndex;
+            mimic.set_physicsLevel(level);
+            utilweb.cookie(COOKIE_MIMIC_PHYSICS_LEVEL, "" + level);
+        });
+        jQuery("#bRefreshArenas").click(refreshArenas);
+    }
+    function refreshArenas(id) {
+        var dropdown = utilweb.$("#selectArena");
+        dropdown.hide(100);
+        var oldId = (id) ? id : dropdown.val();
+        dropdown.empty();
+        var selected = (oldId == null);
+        dropdown.append(new Option("[None]", null, selected, selected));
+        var loadArenas = (list) => {
+            list.forEach((arena) => {
+                selected = (oldId == arena.id);
+                dropdown.append(new Option(arena.name, arena.id, selected, selected));
+            });
+        };
+        datamanager.enumArenas()
+            .done((data) => {
+            var result = JSON.parse(data);
+            loadArenas(result.my);
+            loadArenas(result.public);
+        });
+        if (ide.project && ide.project.content.projecttype_id != 99) {
+            dropdown.show(100);
+        }
+    }
+    async function runEmscriptenProgram(proj, emscripten_script) {
+        if (!emscripten_script) {
+            throw Error("No compiled program set");
+        }
+        async function startProgram(compileType, programJs, userProgram = null) {
+            const state = proj.getState();
+            state.start();
+            const ifc = ide.project.hwInterface.getInterfaceMonitor();
+            ifc.startProgram();
+            if (proj.type.mimic_module == "vexv5") {
+                const mod = await import("./interfaces/vexv5_display.js");
+                mod.vexv5_display.start();
+            }
+            switch (compileType) {
+                case "pymite":
+                    proj.startPymite(programJs, userProgram, (text) => ui_status.appendOutput(text, linkifyOutput));
+                    break;
+                case "micropython":
+                    proj.startMicropython(programJs, userProgram, state, (text) => ui_status.appendOutput(text, linkifyOutput), () => onProgramTerminate());
+                    break;
+                case "duktape":
+                    proj.startDuktape(programJs, userProgram, (text) => ui_status.appendOutput(text, linkifyOutput), () => onProgramTerminate());
+                    break;
+                case "server":
+                    proj.startProgram(programJs, (text) => ui_status.appendOutput(text, linkifyOutput), () => onProgramTerminate());
+                    break;
+                default:
+                    throw new Error("Unknown compile type: " + compileType);
+            }
+        }
+        let mainLibJs;
+        try {
+            switch (proj.type.compile_type) {
+                case "pymite":
+                    const pyUsrImgBytesJson = emscripten_script;
+                    mainLibJs = await proj.getInterpreterLibJs("pymite", getApiType(proj.type.progLanguage));
+                    startProgram("pymite", mainLibJs, pyUsrImgBytesJson);
+                    break;
+                case "micropython":
+                    const pyUserProgram = emscripten_script;
+                    mainLibJs = await proj.getInterpreterLibJs("micropython");
+                    startProgram("micropython", mainLibJs, pyUserProgram);
+                    break;
+                case "duktape":
+                    const jsUserProgram = emscripten_script;
+                    mainLibJs = await proj.getInterpreterLibJs("duktape");
+                    startProgram("duktape", mainLibJs, jsUserProgram);
+                    break;
+                case "server":
+                    const fullProgramJs = emscripten_script;
+                    startProgram("server", fullProgramJs);
+                    break;
+            }
+        }
+        catch (error) {
+            ui_status.fail(msg.ERROR_C + error ? "" : error.toString());
+        }
+    }
+    function exitGeneratedCodePanel() {
+        const uiCodegenEditor = ide._editor.generatedCodeAceEditor.uiItem;
+        utilweb.$("#codegen_tab_header").hide();
+        layout.hideTabIcon(layout.TabId.codegen);
+        utilweb.$("#codegen_tab").hide();
+        uiCodegenEditor.hide();
+    }
+    function initializeGeneratedCodePanel() {
+        if (!ide._editor) {
+            throw new Error("Editor not initialized");
+        }
+        function codegenPanelDocked() {
+            const x = jQuery("#codegen_tab[role='tabpanel']");
+            return x.length > 0 && x.css("display") !== "none";
+        }
+        const uiCodegenEditor = ide._editor.generatedCodeAceEditor.uiItem;
+        utilweb.$("#codegen_tab_header").show();
+        layout.showTabIcon(layout.TabId.codegen);
+        uiCodegenEditor.show();
+        ide._editor.contentChange(() => {
+            showGeneratedCode(codegenPanelDocked());
+        });
+        ide._editor.generatedCodeAceEditor
+            .getSelection().on("changeCursor", () => {
+            if (_inGeneratedCodeEditorSetValue) {
+                return;
+            }
+            if (dbgr.getState() == dbgr.State.Paused) {
+                return;
+            }
+            const lineno = ide._editor.generatedCodeAceEditor
+                .getCursorPosition().row;
+            ide._editor.highlightLines([{
+                    lineno: lineno + 1,
+                    type: editor.LineHighlightType.Selected
+                }], false);
+        });
+    }
+    var _inGeneratedCodeEditorSetValue = false;
+    function showGeneratedCode(highlight = false) {
+        if (!ide._editor || !ide._editor.generatedCodeAceEditor) {
+            return;
+        }
+        util.log(LOG, "showGeneratedCode", "highlight", highlight);
+        let sourceOnly = true;
+        let annotateLines = false;
+        let prefix = "";
+        if (utilweb.isTestMode()) {
+            sourceOnly = utilweb.isTestMode("header");
+            annotateLines = utilweb.isTestMode("code");
+        }
+        const result = ide._editor.getCode(sourceOnly, annotateLines);
+        const code = prefix + result.code;
+        if (ide._editor.generatedCodeAceEditor.
+            session.doc.getValue() != code) {
+            _inGeneratedCodeEditorSetValue = true;
+            ide._editor.generatedCodeAceEditor.
+                session.doc.setValue(code);
+            ide._editor.showErrorMarkers(result.errors);
+            _inGeneratedCodeEditorSetValue = false;
+        }
+        if (highlight &&
+            dbgr.getState() != dbgr.State.Paused) {
+            const blockId = ide._editor.getSelectedBlockId();
+            if (blockId === null || blockId === undefined) {
+                ide._editor.highlightBlocks([]);
+            }
+            else {
+                ide._editor.highlightBlocks([{
+                        blockId: blockId,
+                        type: editor.LineHighlightType.Selected
+                    }]);
+            }
+        }
+    }
+    function uncheckConfigToCodeIfCodeDetectPorts() {
+        if (ide._editor && ide._editor.codeModel && ide._editor.aceEditor && shouldCopyConfigToCode()) {
+            const lines = ide._editor.aceEditor.getSession().getDocument().getAllLines();
+            const region = ide._editor.codeModel.getRegion(lines, interface_code.CONFIG_REGION_NAME);
+            if (region &&
+                interface_code.getInstance().codeHasDetectPortItems(ide._editor.codeModel, region)) {
+                ui_status.warn(msg.CONFIG_TO_CODE_OFF, 8000);
+                shouldCopyConfigToCode(false);
+            }
+        }
+    }
+    async function initializeProjectOptions() {
+        function initCopyProjectRestrictionsUI(rest) {
+            if (!ide.project.content.restrictions.can_copy) {
+                return;
+            }
+            utilweb.$("#bShowCopyProjectRestrictions").click(() => {
+                utilweb.$("#copyProjectRestrictions").show();
+            });
+            utilweb.updateUiList("#restrictionsList", core_project.RESTRICTION_NAMES, (name, uiItem) => {
+                const label = msg.E_PROJECT_RESTRICTIONS[name];
+                utilweb.$(".text", uiItem).text(label);
+                const isChecked = !rest || rest[name];
+                const cb = utilweb.$("input[type=checkbox]", uiItem);
+                cb.prop("id", "cb_" + name);
+                cb.prop("checked", isChecked);
+            });
+        }
+        util.log(LOG_OPTIONS, "initializeProjectOptions");
+        _cbCopyConfigToCode.change(saveProjectOptions);
+        var pid = ide.project.content.project_id;
+        let data = await datamanager.getProjectOptions(pid);
+        if (!data) {
+            data = "{}";
+        }
+        var ps = JSON.parse(data);
+        if (ps.optCopyConfigToCode !== undefined) {
+            _cbCopyConfigToCode.prop("checked", ps.optCopyConfigToCode);
+        }
+        initCopyProjectRestrictionsUI(ps.optRestrictionsOnCopy);
+        if (ps.optBreakpoints) {
+            if (ide._editor) {
+                ide._editor.setBreakpoints(ps.optBreakpoints);
+            }
+        }
+        layout.movePanes({
+            description: ps.optDescriptionPanelLeft,
+            tutorial: ps.optTutorialEditorLeft,
+            codegen: ps.optCodePaneRight,
+            mimic: ps.optMimicEditorRight,
+        });
+        if (!ps.optUiState) {
+            ps.optUiState = {};
+        }
+        layout.initializeLayoutUiState(ps.optUiState);
+        layout.onProjectOptionsLoaded(ps);
+        _projectOptions = ps;
+    }
+    function getAceEditorContent() {
+        if (ide._editor && ide._editor.aceEditor) {
+            return ide._editor.aceEditor.getValue();
+        }
+        throw "Not an ACE editor";
+    }
+    ide.getAceEditorContent = getAceEditorContent;
+    function saveProjectOptions() {
+        util.log(LOG_OPTIONS, "saveProjectOptions");
+        if (!ide.project.content.can_save) {
+            return;
+        }
+        _projectOptions = getProjectOptions();
+        datamanager.saveProjectOptions(ide.project.content.project_id, JSON.stringify(_projectOptions));
+    }
+    var _enableSaveUiState = false;
+    function disableSaveUiState() { _enableSaveUiState = false; }
+    function enableSaveUiState() { _enableSaveUiState = true; }
+    function saveUiState() {
+        if (!_enableSaveUiState) {
+            return;
+        }
+        const uiState = {};
+        layout.saveLayoutUIState(uiState);
+        if (_projectOptions &&
+            util.deepEquals(_projectOptions.optUiState, uiState)) {
+            return;
+        }
+        saveProjectOptions();
+    }
+    function getProjectOptions() {
+        var ps = {};
+        if (_cbCopyConfigToCode) {
+            ps.optCopyConfigToCode = _cbCopyConfigToCode.is(":checked");
+        }
+        ps.optDescriptionPanelLeft = layout._separatePane.description;
+        ps.optTutorialEditorLeft = layout._separatePane.tutorial;
+        ps.optMimicEditorRight = layout._separatePane.mimic;
+        ps.optCodePaneRight = layout._separatePane.codegen;
+        ps.optDebuggerEnabled = dbgr.enabled;
+        if (ide._editor) {
+            ps.optBreakpoints = ide._editor.getBreakpoints();
+        }
+        if (ide.project.content.restrictions.can_copy) {
+            ps.optRestrictionsOnCopy = {};
+            for (const name of core_project.RESTRICTION_NAMES) {
+                const checked = utilweb.$("#restrictionsList #cb_" + name).is(":checked");
+                ps.optRestrictionsOnCopy[name] = checked;
+            }
+        }
+        if (ide.project.hwInterface != null) {
+            if (ide.project.hwInterface.name == "vexiq") {
+                const uiDownloadSlot = jQuery("#selectDownloadIQSlot");
+                if (uiDownloadSlot.length >= 1) {
+                    ps.optDownloadSlot = uiDownloadSlot.val();
+                }
+            }
+            else if (ide.project.hwInterface.name == "vexv5") {
+                const uiDownloadSlot = jQuery("#selectDownloadV5Slot");
+                if (uiDownloadSlot.length >= 1) {
+                    ps.optDownloadSlot = uiDownloadSlot.val();
+                }
+            }
+            else {
+                ps.optDownloadSlot = "user1";
+            }
+        }
+        if (!ps.optUiState) {
+            ps.optUiState = {};
+        }
+        layout.saveLayoutUIState(ps.optUiState);
+        return ps;
+    }
+    let layout;
+    (function (layout) {
+        var outerLayout;
+        var middleLayout;
+        var middleWestTabs;
+        var middleCenterTabs;
+        var middleEastTabs;
+        var eastTabs;
+        let TabId;
+        (function (TabId) {
+            TabId[TabId["description"] = 0] = "description";
+            TabId[TabId["codegen"] = 1] = "codegen";
+            TabId[TabId["mimic"] = 2] = "mimic";
+            TabId[TabId["tutorial"] = 3] = "tutorial";
+        })(TabId = layout.TabId || (layout.TabId = {}));
+        layout._separatePane = {
+            description: false,
+            tutorial: false,
+            codegen: false,
+            mimic: false,
+        };
+        function initializeLayout() {
+            outerLayout = jQuery('#projectWrap').layout({
+                center__paneSelector: ".outer-center",
+                east__paneSelector: ".outer-east",
+                east__size: 310,
+                spacing_open: 6,
+                spacing_closed: 12,
+                livePanelResizing: true,
+                maskIframesOnResize: true,
+                fxSpeed: "fast",
+                fxName: "none",
+                onopen: saveUiState,
+                onclose: saveUiState,
+                onresize: saveUiState,
+            });
+            middleLayout = jQuery('div.outer-center').layout({
+                center__paneSelector: ".middle-center",
+                west__paneSelector: ".middle-west",
+                east__paneSelector: ".middle-east",
+                south__paneSelector: ".middle-south",
+                west__initHidden: true,
+                east__initHidden: true,
+                south__size: 0,
+                spacing_open: 6,
+                spacing_closed: 12,
+                center__onresize: resizeEditor,
+                livePanelResizing: true,
+                maskIframesOnResize: true,
+                fxSpeed: "fast",
+                fxName: "none",
+                onopen: saveUiState,
+                onclose: saveUiState,
+                onresize: saveUiState,
+            });
+            middleWestTabs = jQuery("#middle-westTabs").tabs({
+                active: 1,
+                heightStyle: "content",
+                activate: () => {
+                    resizeEditor();
+                    saveUiState();
+                }
+            });
+            middleCenterTabs = jQuery("#middle-centerTabs").tabs({
+                active: 2,
+                heightStyle: "content",
+                activate: () => {
+                    resizeEditor();
+                    saveUiState();
+                }
+            });
+            middleEastTabs = jQuery("#middle-eastTabs").tabs({
+                active: 1,
+                heightStyle: "content",
+                activate: () => {
+                    resizeEditor();
+                    saveUiState();
+                }
+            });
+            eastTabs = jQuery("#eastTabs").tabs({
+                heightStyle: "content",
+                activate: saveUiState,
+            });
+            initTabMoveIcon(TabId.description);
+            initTabMoveIcon(TabId.tutorial);
+            initTabMoveIcon(TabId.codegen);
+            initTabMoveIcon(TabId.mimic);
+            util.log(LOG, "initializeLayout: fn done");
+            jQuery(window).resize(setTop);
+        }
+        layout.initializeLayout = initializeLayout;
+        function reinitializeLayout() {
+            middleLayout.hide("east");
+            middleLayout.hide("west");
+            layout.movePanes({ description: false, tutorial: false, mimic: false, codegen: false }, false);
+        }
+        layout.reinitializeLayout = reinitializeLayout;
+        function onProjectOptionsLoaded(ps) {
+            setTop();
+            resizeEditor();
+            if (ide._editor) {
+                ide._editor.show();
+            }
+            outerLayout.resizeAll();
+            if (ps.optUiState) {
+                middleLayout.sizePane("south", ps.optUiState.southHeight);
+            }
+            util.log(LOG, "initializeLayout: layout UI ready");
+            onPageLoadingDone();
+            resizeEditor();
+        }
+        layout.onProjectOptionsLoaded = onProjectOptionsLoaded;
+        function setTop() {
+            const totalHeight = jQuery(window).height();
+            const projectTop = jQuery('#projectWrap').position().top;
+            jQuery('#projectWrap').height(totalHeight - projectTop);
+            let apiDocsFrame = jQuery('#apiDocsFrame');
+            if (apiDocsFrame.length > 0) {
+                let helpTop = apiDocsFrame.position().top;
+                if (helpTop === 0) {
+                    helpTop = 34;
+                }
+                jQuery('#apiDocsFrame').height(totalHeight - helpTop - projectTop - 4);
+            }
+            if (ide.project && ide.project.content && !ide.project.content.restrictions.can_show_east_pane) {
+                outerLayout.hide("east");
+            }
+        }
+        ;
+        function focusDebuggerTab() {
+            eastTabs.tabs("option", "active", 2);
+        }
+        layout.focusDebuggerTab = focusDebuggerTab;
+        function saveLayoutUIState(uiState) {
+            if (outerLayout) {
+                uiState.eastOpen = !outerLayout.state.east.isClosed;
+                uiState.eastWidth = outerLayout.state.east.size;
+            }
+            if (middleLayout) {
+                uiState.southOpen = !middleLayout.state.south.isClosed;
+                uiState.southHeight = middleLayout.state.south.size;
+            }
+            if (middleCenterTabs) {
+                uiState.activeTabMiddle = middleCenterTabs.tabs("option", "active");
+            }
+            if (middleEastTabs) {
+                uiState.activeTabMiddleEast = middleEastTabs.tabs("option", "active");
+            }
+            if (middleWestTabs) {
+                uiState.activeTabMiddleWest = middleWestTabs.tabs("option", "active");
+            }
+            if (eastTabs) {
+                uiState.activeTabEast = eastTabs.tabs("option", "active");
+            }
+        }
+        layout.saveLayoutUIState = saveLayoutUIState;
+        function initializeLayoutUiState(uiState) {
+            if (uiState.eastOpen !== undefined) {
+                if (uiState.eastOpen) {
+                    outerLayout.open("east");
+                }
+                else {
+                    outerLayout.close("east");
+                }
+            }
+            if (uiState.eastWidth !== undefined) {
+                outerLayout.sizePane("east", uiState.eastWidth);
+            }
+            if (uiState.southOpen !== undefined) {
+                if (uiState.southOpen) {
+                    middleLayout.open("south");
+                }
+                else {
+                    middleLayout.close("south");
+                }
+            }
+            if (uiState.southHeight === undefined) {
+                uiState.southHeight = 200;
+            }
+            var maxHeight = jQuery(window).height() / 2;
+            if (uiState.southHeight > maxHeight) {
+                uiState.southHeight = maxHeight;
+            }
+            if (uiState.southHeight < 50) {
+                uiState.southHeight = 50;
+            }
+            if (uiState.activeTabMiddle === undefined
+                || uiState.activeTabMiddle >= numTabs("center")) {
+                uiState.activeTabMiddle = findTabIndex("center", "editor");
+            }
+            middleCenterTabs.tabs("option", "active", uiState.activeTabMiddle);
+            if (uiState.activeTabMiddleEast === undefined
+                || uiState.activeTabMiddleEast >= numTabs("east")) {
+                uiState.activeTabMiddleEast = 0;
+            }
+            middleEastTabs.tabs("option", "active", uiState.activeTabMiddleEast);
+            if (uiState.activeTabMiddleWest === undefined
+                || uiState.activeTabMiddleWest >= numTabs("west")) {
+                uiState.activeTabMiddleWest = 0;
+            }
+            middleWestTabs.tabs("option", "active", uiState.activeTabMiddleWest);
+            if (uiState.activeTabEast === undefined
+                || uiState.activeTabEast >= jQuery('#eastTabList li').length) {
+                uiState.activeTabEast = 0;
+            }
+            eastTabs.tabs("option", "active", uiState.activeTabEast);
+        }
+        layout.initializeLayoutUiState = initializeLayoutUiState;
+        function numTabs(area) {
+            return jQuery(`#middle-${area}TabList .ui-tabs-active`).length;
+        }
+        function findTabIndex(area, tabName) {
+            const list = utilweb.$(`#middle-${area}TabList li`);
+            for (let i = 0; i < list.length; i++) {
+                if (list[i].getAttribute("id") == `${tabName}_tab_list`) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+        function movePanes(separatePane, save = true) {
+            const EDITOR_TAB_LIST = utilweb.$("#middle-centerTabList #editor_tab_list");
+            if (separatePane.description !== undefined) {
+                layout._separatePane.description = separatePane.description;
+            }
+            if (separatePane.tutorial !== undefined) {
+                layout._separatePane.tutorial = separatePane.tutorial;
+            }
+            if (separatePane.codegen !== undefined) {
+                layout._separatePane.codegen = separatePane.codegen;
+            }
+            if (separatePane.mimic !== undefined) {
+                layout._separatePane.mimic = separatePane.mimic;
+            }
+            function getTabAreaId(tabId) {
+                return utilweb.$(`#${TabId[tabId]}_tab_list`).closest("ul").attr("id");
+            }
+            function hideAreaIfNoTabs(area, tabIds) {
+                if (area == "center") {
+                    throw new Error("cannot hide center");
+                }
+                for (const id of tabIds) {
+                    if (getTabAreaId(id) == `middle-${area}TabList`) {
+                        return;
+                    }
+                }
+                middleLayout.hide(area);
+            }
+            function moveTo(area, args) {
+                const tabName = TabId[args.tabId];
+                util.log(LOG, `movePanes ${tabName} to ${area}`);
+                const tabList = utilweb.$(`#${tabName}_tab_list`).remove();
+                const wasActive = tabList.hasClass("ui-tabs-active");
+                args.removeTab(area);
+                if (area == "center") {
+                    middleEastTabs.tabs("refresh");
+                    middleWestTabs.tabs("refresh");
+                    tabList.removeClass("ui-state-active");
+                    tabList.removeClass("ui-state-focus");
+                    tabList.removeClass("ui-tabs-active");
+                }
+                else {
+                    middleCenterTabs.tabs("refresh");
+                }
+                args.insertTabList(jQuery(`#middle-${area}TabList`), tabList);
+                args.addTab(area);
+                function getAreaTabs(area) {
+                    switch (area) {
+                        case "center": return middleCenterTabs;
+                        case "east": return middleEastTabs;
+                        case "west": return middleWestTabs;
+                    }
+                }
+                const areaTabs = getAreaTabs(area);
+                areaTabs.tabs("refresh");
+                areaTabs.tabs("option", "active", findTabIndex(area, tabName));
+                if (area == "east" || area == "west") {
+                    if (middleLayout.state[area].isHidden) {
+                        var middle_size = jQuery("#middle-centerSection").width();
+                        middleLayout.sizePane(area, middle_size / 2);
+                    }
+                    middleLayout.show(area);
+                    if (wasActive) {
+                        middleCenterTabs.tabs("option", "active", findTabIndex("center", "editor"));
+                    }
+                }
+            }
+            let mceContent = null;
+            const moveDescriptionArgs = {
+                tabId: TabId.description,
+                insertTabList: (list, item) => list.prepend(item),
+                removeTab: () => {
+                    if (isDescriptionEditable()) {
+                        mceContent = getTinyMceContent();
+                        tinyMCE.remove();
+                    }
+                    jQuery("#description_tab").remove();
+                },
+                addTab: (area) => {
+                    if (isDescriptionEditable()) {
+                        jQuery(`#middle-${area}Section`).append('<div id="description_tab"><textarea id="description">' + mceContent + '</textarea></div>');
+                        tinyMCE.init(_tinymceDescriptionOptions);
+                    }
+                    else {
+                        jQuery(`#middle-${area}Section`).append('<div id="description_tab">' + DESCRIPTION_READONLY_TAG + ide.project.content.description + "</div></div>");
+                    }
+                },
+            };
+            if (layout._separatePane.description) {
+                if (getTabAreaId(TabId.description) != "middle-westTabList") {
+                    moveTo("west", moveDescriptionArgs);
+                    initTabMoveIcon(TabId.description);
+                }
+            }
+            else {
+                if (getTabAreaId(TabId.description) != "middle-centerTabList") {
+                    let mce_content = null;
+                    moveTo("center", moveDescriptionArgs);
+                    hideAreaIfNoTabs("west", [TabId.description, TabId.tutorial]);
+                    resizeEditor();
+                    initTabMoveIcon(TabId.description);
+                }
+            }
+            let tutBlocklyDiv;
+            let tutTab;
+            const tutRemoveTab = () => {
+                tutTab = utilweb.$("#tutorial_tab").detach();
+                tutBlocklyDiv = jQuery("#tutorialBlocklyDiv").remove();
+            };
+            const tutAddTab = (area) => {
+                jQuery(`#middle-${area}Section`).prepend(tutBlocklyDiv);
+                jQuery(`#middle-${area}Section`).append(tutTab);
+            };
+            if (layout._separatePane.tutorial) {
+                if (getTabAreaId(TabId.tutorial) != "middle-westTabList") {
+                    moveTo("west", {
+                        tabId: TabId.tutorial,
+                        insertTabList: (list, item) => list.append(item),
+                        removeTab: tutRemoveTab,
+                        addTab: tutAddTab
+                    });
+                    initTabMoveIcon(TabId.tutorial);
+                    if (tutTab.css("display") == "block") {
+                        tutTab.css("display", "table");
+                    }
+                    if (tutorial && tutorial.editor) {
+                        tutorial.editor.resize(0);
+                    }
+                }
+            }
+            else {
+                if (getTabAreaId(TabId.tutorial) != "middle-centerTabList") {
+                    moveTo("center", {
+                        tabId: TabId.tutorial,
+                        insertTabList: (list, item) => item.insertBefore(EDITOR_TAB_LIST),
+                        removeTab: tutRemoveTab,
+                        addTab: tutAddTab
+                    });
+                    hideAreaIfNoTabs("west", [TabId.description, TabId.tutorial]);
+                    initTabMoveIcon(TabId.tutorial);
+                    if (tutTab.css("display") == "block") {
+                        tutTab.css("display", "table");
+                    }
+                    if (tutorial && tutorial.editor) {
+                        tutorial.editor.resize(0);
+                    }
+                }
+            }
+            let codegenTab;
+            if (layout._separatePane.codegen) {
+                if (getTabAreaId(TabId.codegen) != "middle-eastTabList") {
+                    moveTo("east", {
+                        tabId: TabId.codegen,
+                        removeTab: () => codegenTab = utilweb.$("#codegen_tab").detach(),
+                        addTab: (area) => utilweb.$(`#middle-${area}Section`).append(codegenTab),
+                        insertTabList: (list, item) => list.prepend(item),
+                    });
+                    showGeneratedCode(true);
+                    initTabMoveIcon(TabId.codegen);
+                    if (ide._editor && ide._editor.generatedCodeAceEditor) {
+                        editor_ace.AceEditor.subscribeZoomControlEvents("codegen_tab", ide._editor.generatedCodeAceEditor);
+                    }
+                }
+            }
+            else {
+                if (getTabAreaId(TabId.codegen) != "middle-centerTabList") {
+                    moveTo("center", {
+                        tabId: TabId.codegen,
+                        removeTab: () => codegenTab = utilweb.$("#codegen_tab").detach(),
+                        addTab: (area) => utilweb.$(`#middle-${area}Section`).append(codegenTab),
+                        insertTabList: (list, item) => item.insertAfter(EDITOR_TAB_LIST),
+                    });
+                    hideAreaIfNoTabs("east", [TabId.codegen, TabId.mimic]);
+                    initTabMoveIcon(TabId.codegen);
+                    if (ide._editor && ide._editor.generatedCodeAceEditor) {
+                        editor_ace.AceEditor.subscribeZoomControlEvents("codegen_tab", ide._editor.generatedCodeAceEditor);
+                    }
+                }
+            }
+            let mimicTab = null;
+            const moveMimicArgs = {
+                tabId: TabId.mimic,
+                insertTabList: (list, item) => list.append(item),
+                removeTab: () => mimicTab = utilweb.$("#mimic_tab").detach(),
+                addTab: (area) => utilweb.$(`#middle-${area}Section`).append(mimicTab),
+            };
+            if (layout._separatePane.mimic) {
+                if (getTabAreaId(TabId.mimic) != "middle-eastTabList") {
+                    moveTo("east", moveMimicArgs);
+                    initTabMoveIcon(TabId.mimic);
+                }
+            }
+            else {
+                if (getTabAreaId(TabId.mimic) != "middle-centerTabList") {
+                    moveTo("center", moveMimicArgs);
+                    hideAreaIfNoTabs("east", [TabId.codegen, TabId.mimic]);
+                    initTabMoveIcon(TabId.mimic);
+                }
+            }
+            if (save) {
+                saveProjectOptions();
+            }
+        }
+        layout.movePanes = movePanes;
+        function resizeEditor() {
+            const height = jQuery("div.middle-center").height();
+            jQuery('#middle-centerTabs').height(height);
+            jQuery('#middle-eastTabs').height(height);
+            jQuery('#middle-westTabs').height(height);
+            const tabsnav_height = jQuery("#middle-centerTabList").height();
+            if (ide._editor) {
+                ide._editor.resize(height);
+            }
+            if (ide._editor && ide._editor.generatedCodeAceEditor) {
+                editor_ace.AceEditor.resizeAce(height, ide._editor.generatedCodeAceEditor);
+            }
+            const mceDescription = jQuery('#description_ifr');
+            if (mceDescription.is(':visible')) {
+                mceDescription.height(height - tabsnav_height - jQuery('.mce-toolbar').height() - 4);
+            }
+            const readonlyDescription = jQuery("#description_tab #description");
+            if (readonlyDescription.is(':visible')) {
+                readonlyDescription.height(height - tabsnav_height - 4);
+            }
+            if (ide.project.hasMimic()) {
+                if (ide.mimicEngine) {
+                    ide.mimicEngine.resize(height);
+                }
+                resizeMimicGroupsTab();
+            }
+            else {
+                var east_height = jQuery("div.outer-east").height() -
+                    jQuery("#eastTabList").height()
+                    - 4;
+                jQuery('#eastTabs').height(east_height);
+            }
+            if (tutorial && tutorial.editor) {
+                tutorial.editor.resize(height);
+            }
+        }
+        function resizeMimicGroupsTab() {
+            var height = jQuery("div.outer-east").height() - 4;
+            jQuery('#eastTabs').height(height);
+            var tabsnav_height = jQuery("#eastTabList").height();
+            var free = height - tabsnav_height - 112;
+            var half = Math.round(free / 2);
+            var maxProperties = 277;
+            var properties = (half > maxProperties) ? maxProperties : half;
+            var groups = free - properties;
+            jQuery('#groups-main').css('height', groups);
+            jQuery('#properties-main').css('height', properties);
+            jQuery('#groups-main').nanoScroller();
+            jQuery('#properties-main').nanoScroller();
+        }
+        layout.resizeMimicGroupsTab = resizeMimicGroupsTab;
+        function initTabMoveIcon(tabId) {
+            let icon = "";
+            switch (tabId) {
+                case TabId.description:
+                    icon = layout._separatePane.description ? "TabMoveRight.png" : "TabMoveLeft.png";
+                    break;
+                case TabId.tutorial:
+                    icon = layout._separatePane.tutorial ? "TabMoveRight.png" : "TabMoveLeft.png";
+                    break;
+                case TabId.codegen:
+                    icon = layout._separatePane.codegen ? "TabMoveLeft.png" : "TabMoveRight.png";
+                    break;
+                case TabId.mimic:
+                    icon = layout._separatePane.mimic ? "TabMoveLeft.png" : "TabMoveRight.png";
+                    break;
+            }
+            utilweb.$("#" + TabId[tabId] + "_tab_list .ui-closable-tab")
+                .css({ "background-image": "url(" + utilweb.getResourceUrl(icon) + ")" })
+                .click(() => {
+                switch (tabId) {
+                    case TabId.description:
+                        movePanes({ description: !layout._separatePane.description });
+                        break;
+                    case TabId.tutorial:
+                        movePanes({ tutorial: !layout._separatePane.tutorial });
+                        break;
+                    case TabId.codegen:
+                        movePanes({ codegen: !layout._separatePane.codegen });
+                        break;
+                    case TabId.mimic:
+                        movePanes({ mimic: !layout._separatePane.mimic });
+                        break;
+                }
+            });
+        }
+        function showTabIcon(tabId) {
+            utilweb.$("#" + TabId[tabId] + "_tab_list .ui-closable-tab").css({ display: "inline-block" });
+        }
+        layout.showTabIcon = showTabIcon;
+        function hideTabIcon(tabId) {
+            utilweb.$("#" + TabId[tabId] + "_tab_list .ui-closable-tab").css({ display: "none" });
+        }
+        layout.hideTabIcon = hideTabIcon;
+    })(layout || (layout = {}));
+    function refreshPorts() {
+        if (!_plugin) {
+            showRmcPluginLoadFailedMessage();
+            return;
+        }
+        const dropdown = jQuery("#selectPort");
+        dropdown.hide(200);
+        rmc_browser.fillPortsDropdown(_plugin);
+        dropdown.show(200);
+    }
+    function saveUI() {
+        clearOutput();
+        return executeAndShowUI(save_op.save(), msg.SAVING, msg.SAVED_DONE);
+    }
+    function privacyUI() {
+        clearOutput();
+        return executeAndShowUI(privacy(), msg.SETTING_PRIVACY_LEVEL, msg.SET_PRIVACY_LEVEL_DONE);
+    }
+    function featuredUI() {
+        clearOutput();
+        return executeAndShowUI(featured(), msg.SETTING_FEATURED, msg.SET_FEATURED_DONE);
+    }
+    var _isEditorPermanentReadOnly = null;
+    function setEditorTempReadOnly(isReadOnly) {
+        if (!ide._editor) {
+            return;
+        }
+        if (_isEditorPermanentReadOnly == null) {
+            _isEditorPermanentReadOnly = ide._editor.getReadOnly();
+        }
+        if (_isEditorPermanentReadOnly) {
+            return;
+        }
+        ide._editor.setReadOnly(isReadOnly);
+        const editorSupportsTheme = (ide._editor
+            && ide._editor.setTheme
+            && !ide._editor.getReadOnly());
+        if (editorSupportsTheme && !isReadOnly) {
+            const theme = ide.project.content.user_options.ace_theme;
+            ide._editor.setTheme(theme);
+        }
+    }
+    function releaseEditor() {
+        setEditorTempReadOnly(false);
+    }
+    function compileUI(args, proj) {
+        if (args.runOnServer) {
+            return executeAndShowUI(compile(args, proj), msg.RUNNING_ON_SERVER, msg.RUN_ON_SERVER_DONE);
+        }
+        else if (args.enterCompetitionId) {
+            return executeAndShowUI(compile(args, proj), msg.COMPILING_TO_JOIN_COMPETIOTION, msg.JOIN_COMPETITION_DONE);
+        }
+        else {
+            return executeAndShowUI(compile(args, proj), msg.COMPILING, msg.COMPILE_DONE);
+        }
+    }
+    function downloadOrRunUI(downloadOnly) {
+        return executeAndShowUI(downloadOrRun(_compiled.download_args, downloadOnly), msg.DOWNLOADING, msg.DOWNLOAD_DONE);
+    }
+    function willDebuggerRun(args, portName) {
+        if (ide.project.hasMimic() || isEmscriptenConnectedMode()) {
+            if (args.runOnServer) {
+                return false;
+            }
+            else if (args.enterCompetitionId) {
+                return false;
+            }
+            else {
+                return true;
+            }
+        }
+        else {
+            if (utilweb.isValidSerialPortName(portName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    function runProgram(stepByStepMode = dbgr.StepByStepMode.Off) {
+        uiUpdateReplayButton(true);
+        buildUI({ dbgrStepByStepMode: stepByStepMode });
+    }
+    ide.runProgram = runProgram;
+    function buildUI(args = {}) {
+        dbgr.doStop();
+        dbgr.setStepByStepMode(args.dbgrStepByStepMode);
+        if ((ide.project.hasMimic() && args.downloadOnly)
+            && !_plugin) {
+            showRmcPluginLoadFailedMessage();
+            return;
+        }
+        let device_name = (ide.project.hwInterface != null) ? ide.project.hwInterface.getDownloader().usbDeviceType : null;
+        rmc_browser.getSelectedPort(_plugin, device_name).then((portName) => {
+            if (!args.buildOnly
+                && (!ide.project.hasMimic() || args.downloadOnly)
+                && !utilweb.isValidSerialPortName(portName)
+                && !utilweb.isTestMode("no-port")) {
+                ui_status.fail(msg.ERR_INTERFACE_NOT_CONNECTED);
+                ui_status.clearOutput();
+                ui_status.appendOutput(msg.ERR_INTERFACE_NOT_CONNECTED_LONG);
+                return;
+            }
+            if (!args.downloadOnly &&
+                dbgr.enabled &&
+                ide.project.type.supportsDebugger &&
+                ide.project.content.restrictions.can_use_debugger &&
+                willDebuggerRun(args, portName)) {
+                setEditorTempReadOnly(true);
+            }
+            clearOutput();
+            let saving = null;
+            if (ide.project.content.can_save) {
+                if (useJsBuildCompile()) {
+                    save_op.save();
+                }
+                else {
+                    saving = saveUI();
+                }
+            }
+            jQuery.when(saving)
+                .then(function () {
+                return compileUI(args, ide.project);
+            })
+                .then(() => {
+                if ((ide.project.hasMimic() && !args.downloadOnly)
+                    || isEmscriptenConnectedMode()) {
+                    if (args.runOnServer) {
+                    }
+                    else if (args.enterCompetitionId) {
+                    }
+                    else {
+                        ide.save_op.autosaveSuspend(msg.TT_AUTOSAVE_SUSPENDED_ON_PHYSICS);
+                        gamepad.activateKeyboardJoystick();
+                        runEmscriptenProgram(ide.project, _compiled.download_args.emscripten_script);
+                        ide.mimicEngine.physicsGo(mimic.PhysicsMode.Run, ide.project.content.arena_logic, ide._cbMimicPhysicsOutlines.is(":checked"));
+                        if (tutorial) {
+                            tutorial.resolveUserEvent("userProgramRun");
+                        }
+                    }
+                    return utilweb.resolvedPromise();
+                }
+                else {
+                    if (!args.buildOnly
+                        && utilweb.isValidSerialPortName(portName)
+                        && !utilweb.isTestMode("no-port")) {
+                        return downloadOrRunUI(args.downloadOnly)
+                            .then(() => {
+                            if (tutorial) {
+                                tutorial.resolveUserEvent("userProgramRun");
+                            }
+                        }, (error) => {
+                            const errMsg = error ? error.message || error.toString() : "";
+                            const userCancelled = errMsg.indexOf(rmc.CANCELLED) != -1;
+                            if (ide.project.hwInterface.getDownloader().retryOnConnectionFail
+                                && !userCancelled) {
+                                ui_status.appendOutput(msg.CONNECTION_FAILED_TRYING_TO_RECONNECT + "\n");
+                                return downloadOrRunUI(args.downloadOnly);
+                            }
+                            else {
+                                releaseEditor();
+                            }
+                        })
+                            .then(() => {
+                            if (tutorial) {
+                                tutorial.resolveUserEvent("userProgramRun");
+                            }
+                        }, (error) => {
+                            releaseEditor();
+                        });
+                    }
+                    else {
+                        releaseEditor();
+                    }
+                }
+            }, releaseEditor);
+        });
+    }
+    function shouldCopyConfigToCode(setValue) {
+        if (setValue !== undefined) {
+            _cbCopyConfigToCode.prop('checked', setValue);
+        }
+        return _cbCopyConfigToCode.is(":checked");
+    }
+    function shouldForceFullDownload() {
+        return _cbForceFullDownload.is(":checked");
+    }
+    function isEmscriptenConnectedMode() {
+        return false;
+    }
+    function executeAndShowUI(promise, msgStarted, msgDone) {
+        const uiButtons = jQuery(".buildButton, #bSave");
+        uiButtons.attr("disabled", true);
+        ui_status.info(msgStarted);
+        const startTimeMs = Date.now();
+        const jqPromise = promise instanceof Promise ? utilweb.wrapAsJQP(promise) : promise;
+        jqPromise
+            .done(function () {
+            ui_status.appendOutput("\n" + i18n.localizeExternal(msgDone));
+            ui_status.done(msgDone);
+        })
+            .fail(function (error) {
+            ui_status.appendOutput("\n" + i18n.localizeExternal(error));
+            ui_status.fail(error.message || error);
+        })
+            .always(function () {
+            uiButtons.attr("disabled", false);
+            const totalMs = Date.now() - startTimeMs;
+            util.log(LOG_TIME, msgDone, totalMs);
+            ui_status.appendOutput(" " + util.format(msg.F_TIME_0_MS, [totalMs]) + "\n\n");
+        });
+        return jqPromise;
+    }
+    function privacy() {
+        var dfd = jQuery.Deferred();
+        var privacy_value = jQuery("#sPrivacy option:selected").val();
+        datamanager.setProjectPrivacy(ide.project.content.project_id, privacy_value)
+            .done(function (data) {
+            var result = JSON.parse(data);
+            if (result.error) {
+                dfd.reject(msg.SET_PRIVACY_LEVEL_FAILED_C + " " + result.error);
+            }
+            else {
+                dfd.resolve();
+            }
+        });
+        return dfd.promise();
+    }
+    function featured() {
+        var dfd = jQuery.Deferred();
+        var featured_value = jQuery("#iFeatured").val();
+        datamanager.setProjectFeatured(ide.project.content.project_id, featured_value)
+            .done(function (data) {
+            var result = JSON.parse(data);
+            if (result.error) {
+                dfd.reject(msg.SET_FEATURED_FAILED_C + " " + result.error);
+            }
+            else {
+                dfd.resolve();
+            }
+        });
+        return dfd.promise();
+    }
+    async function compile(buildArgs, proj) {
+        _hwiGuids = null;
+        if ((ide.project.hasMimic() && !buildArgs.downloadOnly)
+            || isEmscriptenConnectedMode()) {
+            return compileCore(buildArgs, proj);
+        }
+        const startTimeMs = Date.now();
+        interface_download.io.suppressInputError = true;
+        if (proj.hwInterface != null) {
+            await proj.hwInterface.getInterfaceMonitor().disconnect();
+        }
+        await _plugin.closeAllPorts();
+        const portName = await rmc_browser.getSelectedPort(_plugin, proj.hwInterface.getDownloader().usbDeviceType);
+        if (utilweb.isValidSerialPortName(portName)
+            && !buildArgs.buildOnly) {
+            const hwiDownloader = proj.hwInterface.getDownloader();
+            util.log(LOG_DL, "compile: readGuidForDeltaDownload");
+            const guids = await hwiDownloader.readProgramGuids(_plugin, portName, shouldForceFullDownload());
+            _hwiGuids = guids;
+            if (guids && guids.prog1_guid
+                && hwiDownloader.supportsPartialDownload
+                && !shouldForceFullDownload()) {
+                buildArgs.tryPartialDownload = true;
+            }
+            util.log(LOG_TIME, "read guid", Date.now() - startTimeMs);
+        }
+        else {
+            if (proj.hwInterface) {
+                const hwiDownloader = proj.hwInterface.getDownloader();
+                if (hwiDownloader) {
+                    await hwiDownloader.compileInit();
+                }
+            }
+        }
+        return compileCore(buildArgs, proj);
+    }
+    let _compileDfd;
+    function compileCancel() {
+        if (_compileDfd) {
+            _compileDfd.reject(rmc.CANCELLED);
+        }
+    }
+    let download_slot;
+    (function (download_slot) {
+        function getSlot() {
+            let slot = _projectOptions.optDownloadSlot || "user1";
+            if (utilweb.isTestMode("slot_vm")) {
+                slot = "vm";
+            }
+            return slot;
+        }
+        download_slot.getSlot = getSlot;
+        function getNumber() {
+            const slot = getSlot();
+            switch (slot) {
+                case "user1": return 1;
+                case "user2": return 2;
+                case "user3": return 3;
+                case "user4": return 4;
+                case "user5": return 5;
+                case "user6": return 6;
+                case "user7": return 7;
+                case "user8": return 8;
+                case "vm": return 3;
+                default: return null;
+            }
+        }
+        download_slot.getNumber = getNumber;
+        function getGuid() {
+            if (!_hwiGuids) {
+                return null;
+            }
+            else {
+                const slot = getSlot();
+                switch (slot) {
+                    case "user1": return _hwiGuids.prog1_guid;
+                    case "user2": return _hwiGuids.prog2_guid;
+                    case "vm": return _hwiGuids.vm_guid;
+                    default: return null;
+                }
+            }
+        }
+        download_slot.getGuid = getGuid;
+    })(download_slot = ide.download_slot || (ide.download_slot = {}));
+    function compileCore(buildArgs, proj) {
+        let startTimeMs = Date.now();
+        _compileDfd = new util.Deferred();
+        const dfd = _compileDfd;
+        const codeResult = ide._editor.getCode();
+        ide._editor.showErrorMarkers(codeResult.errors, true);
+        let editorCode = codeResult.code;
+        const connectAfterDownload = !buildArgs.downloadOnly;
+        let libType = proj.hwInterface.getLibType(proj.content.projecttype_id, proj.type.progLanguage, editorCode, connectAfterDownload);
+        if (ide._editor.generatesCode
+            && codeResult.errors
+            && codeResult.errors.length > 0) {
+            dfd.reject(msg.GENERATING_CODE_FAILED + " " + codeResult.errors[0].message);
+            return dfd.promise();
+        }
+        if ((ide.project.hasMimic() && !buildArgs.downloadOnly)
+            || isEmscriptenConnectedMode()) {
+            libType = "emscripten";
+        }
+        const downloadSlot = download_slot.getSlot();
+        let shouldDownloadVM = false;
+        if (!ide.project.hasMimic() || buildArgs.downloadOnly) {
+            const hwiDownloader = ide.project.hwInterface.getDownloader();
+            if (hwiDownloader.shouldDownloadVM) {
+                shouldDownloadVM = (downloadSlot === "vm"
+                    || shouldForceFullDownload()
+                    || hwiDownloader.shouldDownloadVM(_hwiGuids, ide.project.type.id));
+            }
+            if (shouldDownloadVM) {
+                ui_status.appendOutput(msg.DOWNLOADING_VM_LIBRARY + "\n");
+            }
+        }
+        const compileOptions = getCompileOptions(buildArgs.downloadOnly);
+        const compileArgs = {
+            compile_type: proj.type.compile_type,
+            project_id: proj.content.project_id,
+            options: compileOptions,
+            source_path: proj.type.source_path,
+            program_name: proj.content.project_name,
+            lib_type: libType,
+            base_guid: (buildArgs.tryPartialDownload
+                && !buildArgs.buildOnly
+                && _hwiGuids)
+                ? _hwiGuids.prog1_guid : "",
+            download_slot: downloadSlot,
+            slot_addrs: _hwiGuids,
+        };
+        const downloadArgs = {
+            program_name: proj.content.project_name,
+            icon_name: proj.type.v5icon_name,
+            auto_run: !buildArgs.downloadOnly,
+            wifi: compileOptions.indexOf("-wifi ") >= 0,
+            download_vm: shouldDownloadVM,
+            download_connected: false,
+            image: undefined,
+            base_image: undefined,
+            emscripten_script: undefined,
+            slot1_image: undefined,
+            slot2_image: undefined,
+            download_slot: undefined,
+            slot_addrs: undefined,
+            program_filename: undefined,
+            program_version: undefined,
+            program_vid: undefined,
+        };
+        const savedCode = save_op.getSavedCode();
+        if (!buildArgs.runOnServer
+            && _compiled && _compiled.download_args
+            && (_compiled.download_args.image
+                || _compiled.download_args.slot1_image
+                || _compiled.download_args.slot2_image)
+            && (savedCode
+                && _compiled.code == savedCode
+                && editorCode == savedCode)
+            && compileArgs.lib_type == _compiled.lib_type
+            && compileArgs.options == _compiled.options
+            && downloadSlot == _compiled.download_args.download_slot) {
+            ui_status.appendOutput(msg.CODE_UNCHANGED_COMPILE_SKIPPED + "\n");
+            dfd.resolve();
+            return dfd.promise();
+        }
+        if (!buildArgs.buildOnly
+            && proj.hwInterface.getDownloader().supportsPartialDownload) {
+            let isPartialDownload = false;
+            if (useJsBuildCompile()) {
+                isPartialDownload = old_image.isSaved(compileArgs.base_guid);
+            }
+            else {
+                isPartialDownload = compileArgs.base_guid !== "";
+            }
+            ui_status.appendOutput((isPartialDownload ?
+                msg.PERFORMING_A_PARTIAL_DOWNLOAD : msg.PERFORMING_A_FULL_DOWNLOAD) + "\n");
+        }
+        _compiled = null;
+        function onServerCompileDone(data) {
+            util.log(LOG_TIME, "compileCoreServer", Date.now() - startTimeMs);
+            if (data[0] === "<" && utilweb.isOnDevServer()) {
+                ui_status.appendOutput("<h2>PHP ERROR</h2>" + data);
+                return;
+            }
+            const serverResult = JSON.parse(data);
+            if (serverResult.error) {
+                if (serverResult.output) {
+                    ui_status.appendOutput(i18n.localizeExternal(serverResult.output), linkifyOutput);
+                }
+                dfd.reject(msg.COMPILING_FAILED_C + " " + i18n.localizeExternal(serverResult.error));
+            }
+            else {
+                const result = {
+                    output: serverResult.output,
+                    error: serverResult.error,
+                    image: serverResult.bin_b64 ? util.base64toBytes(serverResult.bin_b64) : null,
+                    emscripten_script: serverResult.emscripten_script,
+                };
+                onCompileDone(result, false);
+            }
+        }
+        function onCompileDone(data, isJsBuild) {
+            try {
+                util.log(LOG_TIME, "compileCore", Date.now() - startTimeMs);
+                let result = data;
+                if (result.output) {
+                    ui_status.appendOutput(i18n.localizeExternal(result.output), linkifyOutput);
+                }
+                if (result.error) {
+                    dfd.reject(msg.COMPILING_FAILED_C + " " + i18n.localizeExternal(result.error));
+                }
+                else {
+                    const confirmOverwriteMsg = interface_download.checkProgramSizeForSlotOverwrite(result);
+                    if (confirmOverwriteMsg) {
+                        if (confirm(confirmOverwriteMsg)) {
+                            dfd.reject(msg.USER_CANCELED_DOWNLOAD);
+                            return;
+                        }
+                    }
+                    downloadArgs.image = result.image;
+                    downloadArgs.slot1_image = result.slot1_image;
+                    downloadArgs.slot2_image = result.slot2_image;
+                    downloadArgs.emscripten_script = result.emscripten_script;
+                    downloadArgs.slot_addrs = result.slot_addrs || _hwiGuids;
+                    downloadArgs.download_slot = result.download_slot || compileArgs.download_slot;
+                    _compiled = {
+                        code: isJsBuild ? editorCode : savedCode,
+                        lib_type: compileArgs.lib_type,
+                        options: compileArgs.options,
+                        guid: result.base_guid,
+                        download_args: downloadArgs,
+                    };
+                    if (proj.hwInterface.getDownloader().supportsPartialDownload) {
+                        old_image.save(result.base_guid, result.image);
+                    }
+                    dfd.resolve();
+                }
+            }
+            catch (e) {
+                dfd.reject(msg.COMPILING_FAILED_INTERNAL_ERROR_C + " " + e);
+            }
+        }
+        function onCompileFail(error) {
+            dfd.reject(msg.COMPILING_FAILED_INTERNAL_ERROR_C + " " + error);
+        }
+        if (useJsBuildCompile()) {
+            if (compileArgs.compile_type === "server"
+                && window.nwjsServerBuild) {
+                window.nwjsServerBuild(editorCode, compileArgs);
+            }
+            downloadArgs.base_image = old_image.get(compileArgs.base_guid);
+            jsbuild.compile(editorCode, ide.project, compileArgs)
+                .done((result) => onCompileDone(result, true))
+                .fail((error) => onCompileFail(error));
+        }
+        else {
+            datamanager.compileProject(compileArgs)
+                .done((result) => onServerCompileDone(result))
+                .fail((error) => onCompileFail(error));
+        }
+        return dfd.promise();
+    }
+    function getCompileOptions(downloadOnly) {
+        var options = "";
+        if (downloadOnly) {
+            options += " --download_only ";
+        }
+        const connectAfterDownload = !downloadOnly;
+        if ((ide.project.hasMimic() && !downloadOnly)
+            || isEmscriptenConnectedMode()) {
+            options += " --emscripten ";
+        }
+        var lang = ide.project.type.progLanguage;
+        const code = ide._editor.getCode().code;
+        var ifcOptions = ide.project.hwInterface.getCompileOptions(ide.project.content.projecttype_id, lang, code, connectAfterDownload);
+        if (ifcOptions) {
+            options += ifcOptions + " ";
+        }
+        return options;
+    }
+    async function downloadAndListenForOutput(args) {
+        const hwiDownloader = ide.project.hwInterface.getDownloader();
+        util.log(LOG_DL, "downloadAndListenForOutput: beforeDownload");
+        const port = await hwiDownloader.beforeDownload(_plugin, args.portName);
+        if (await interface_monitor.firmware_update.tryStart(port)) {
+            return;
+        }
+        try {
+            _downloadOrRunCancelToken = new interface_download.CancelToken();
+            await hwiDownloader.download({
+                port: port,
+                isReDownload: args.isReDownload,
+                isCpp: ide.project.type.progLanguage == ProgLanguage.Cpp,
+                downloadArgs: args.downloadArgs,
+                cancelToken: _downloadOrRunCancelToken,
+                onProgress: (percentDone) => {
+                    ui_status.info(util.format(msg.F_DOWNLOADING_ON_0_1_PERC, [rmc.shortPortName(args.portName), percentDone]));
+                },
+            });
+        }
+        catch (error) {
+            let userCancelled = false;
+            if (_downloadOrRunCancelToken.isCancelled()) {
+                _downloadOrRunCancelToken = new interface_download.CancelToken();
+                userCancelled = true;
+                error = msg.USER_CANCELED_DOWNLOAD;
+            }
+            if (hwiDownloader.retryOnConnectionFail
+                && !userCancelled
+                && !args.isRetry) {
+                ui_status.appendOutput(msg.DOWNLOAD_FAILED_TRYING_AGAIN + "\n");
+                util.log(LOG_DL, "downloadAndListenForOutput: failed, trying again");
+                args.isRetry = true;
+                args.isReDownload = false;
+                return downloadAndListenForOutput(args);
+            }
+            util.log(LOG_ERR, "downloadAndListenForOutput", error);
+            throw msg.DOWNLOAD_ERROR_C + " " + error;
+        }
+        _downloaded = {
+            image: _compiled.download_args.image,
+            emscripten_script: _compiled.download_args.emscripten_script,
+            guid: _compiled.guid
+        };
+        util.log(LOG_DL, "downloadAndListenForOutput: tryListenForOutout");
+        tryListenForOutput(args.userPortName, args.downloadOnly).then(() => { }, (error) => ui_status.fail(msg.CONNECT_AFTER_DOWNLOAD_ERROR_C + " " + error));
+    }
+    let _downloadOrRunCancelToken = new interface_download.CancelToken();
+    function downloadOrRunCancel() {
+        _downloadOrRunCancelToken.cancel();
+    }
+    async function downloadOrRun(downloadArgs, downloadOnly) {
+        let shouldDownload = true;
+        let shouldReDownload = false;
+        const guid = download_slot.getGuid();
+        const slotNum = download_slot.getNumber();
+        if (!shouldForceFullDownload()
+            && _downloaded
+            && (_downloaded.guid && _downloaded.guid == guid)
+            && (_downloaded.image && _downloaded.image == _compiled.download_args.image)) {
+            if (ide.project.hwInterface.getDownloader().runProgram) {
+                shouldDownload = false;
+            }
+            shouldReDownload = true;
+        }
+        if ((ide.project.hasMimic() && !downloadOnly)
+            || isEmscriptenConnectedMode()) {
+            throw new Error("Cannot download an Emscripten program.");
+        }
+        if ((shouldDownload || shouldReDownload)
+            && !_compiled.download_args.image) {
+            throw new Error("_compiled.download_args.image not set");
+        }
+        const portName = await rmc_browser.getSelectedPort(_plugin, ide.project.hwInterface.getDownloader().usbDeviceType);
+        const userPortName = await rmc_browser.getSelectedPort(_plugin, ide.project.hwInterface.getDownloader().usbUserDeviceType);
+        if (!utilweb.isValidSerialPortName(portName)) {
+            throw msg.INVALID_PORT_C + " " + portName;
+        }
+        if (rmc.currentVersion != rmc.Version.Recommended) {
+            ui_status.appendOutput(msg.FOR_BETTER_DOWNLOADS_UPGRADE, (html) => {
+                return "<a onclick='eh_rmc_install.openDialog()' href='javascript:void(0)' style='color:red; text-decoration:underline;'>" + html + "</a><br/>";
+            });
+        }
+        interface_download.io.suppressInputError = true;
+        await _plugin.closeAllPorts();
+        util.log(LOG_DL, "downloadOrRun", shouldDownload);
+        if (shouldDownload) {
+            await downloadAndListenForOutput({
+                portName: portName,
+                userPortName: userPortName,
+                downloadArgs: downloadArgs,
+                isRetry: false,
+                isReDownload: shouldReDownload,
+                downloadOnly: downloadOnly,
+            });
+        }
+        else {
+            if (!downloadOnly) {
+                try {
+                    const slotNum = download_slot.getNumber();
+                    await ide.project.hwInterface.getDownloader().runProgram(_plugin, portName, slotNum);
+                }
+                catch (error) {
+                    throw msg.RUN_ERROR_C + " " + error;
+                }
+            }
+            util.log(LOG_DL, "downloadOrRun: tryListenForOutout");
+            tryListenForOutput(userPortName, downloadOnly);
+        }
+    }
+    async function tryListenForOutput(portName, downloadOnly) {
+        if (downloadOnly) {
+            ui_status.appendOutput(msg.NOT_LISTENING_FOR_OUTPUT);
+            return;
+        }
+        ui_status.appendOutput(msg.LISTENING_FOR_OUTPUT + "\n");
+        const addDelay = utilweb.isInternetExplorer();
+        await interface_download.io.listenForOutput(ide.project.hwInterface.getDownloader(), _plugin, portName, addDelay, (port, hex) => {
+            rm_protocol.processInput(port, hex, processDataPacket, processTextOutput, ide.project.hwInterface.getDownloader().sendHexData);
+        });
+    }
+    async function stopExecution() {
+        sound.stop();
+        dbgr.doStop();
+        releaseEditor();
+        compileCancel();
+        downloadOrRunCancel();
+        if (ide.project.hasMimic() || isEmscriptenConnectedMode()) {
+            ide.project.stop();
+            ide.save_op.autosaveStart();
+            interface_monitor._intmonUi.stop();
+            uiUpdateReplayButton(false);
+        }
+        else {
+            const portName = await rmc_browser.getSelectedPort(_plugin, ide.project.hwInterface.getDownloader().usbDeviceType);
+            if (utilweb.isValidSerialPortName(portName)) {
+                interface_download.io.suppressInputError = true;
+                interface_download.io.port = null;
+                await _plugin.closeAllPorts();
+                await ide.project.hwInterface.getDownloader().stopExecution(_plugin, portName);
+                ui_status.done(msg.STOPPED_EXECUTION);
+                ui_status.appendOutput(msg.STOPPED_EXECUTION + "\n");
+            }
+        }
+        if (tutorial) {
+            tutorial.resolveUserEvent("userProgramStop");
+        }
+    }
+    ide.stopExecution = stopExecution;
+    function clientStart() {
+        datamanager.startGame(ide.project.content.project_id)
+            .done((data) => {
+            var result = JSON.parse(data);
+            utilweb.navigateToUrl(result.target);
+        });
+    }
+    ide.clientStart = clientStart;
+    function replayMimic() {
+        ide.save_op.autosaveSuspend(msg.TT_AUTOSAVE_SUSPENDED_ON_PHYSICS);
+        ide.mimicEngine.physicsGo(mimic.PhysicsMode.Replay, null, ide._cbMimicPhysicsOutlines.is(":checked"));
+    }
+    ide.replayMimic = replayMimic;
+    function connectTestMimic() {
+        const field_logic = (ide.project.type.id == ProjectTypeId.Arena) ? ide._editor.getCode().code : ide.project.content.arena_logic;
+        ide.mimicEngine.physicsGo(mimic.PhysicsMode.Connect, field_logic, ide._cbMimicPhysicsOutlines.is(":checked"));
+    }
+    ide.connectTestMimic = connectTestMimic;
+    function submitMimicRecording() {
+        utilweb.$("#bReplaySubmit").prop("disabled", true);
+        datamanager.submitReplay({
+            project_id: ide.project.content.project_id,
+            model_id: ide.project.content.model_id,
+            recording: JSON.stringify(mimic.getRecording()),
+        })
+            .done(() => {
+            ui_status.done(msg.MIMIC_REPLAY_SUBMITTED);
+            alert(msg.MIMIC_REPLAY_SUBMITTED);
+        })
+            .fail((error) => utilweb.$("#bReplaySubmit").prop("disabled", false));
+    }
+    ide.submitMimicRecording = submitMimicRecording;
+    function projectOptions() {
+        jQuery("#copyProjectRestrictions").hide();
+        const uiEditorOptions = utilweb.$("#editorOptions");
+        const editorSupportsTheme = (ide._editor
+            && ide._editor.setTheme
+            && !ide._editor.getReadOnly());
+        if (editorSupportsTheme) {
+            const uiSelectTheme = utilweb.$("#sEditorTheme");
+            const themes = editor_ace.THEMES;
+            const curTheme = ide._editor.getTheme();
+            utilweb.updateUiList("#editorOptions", themes, (theme, uiItem) => uiItem.text(theme), curTheme, "select", "option");
+            uiSelectTheme.off('change');
+            uiSelectTheme.change(() => {
+                const theme = uiSelectTheme.find(":selected").text();
+                if (editorSupportsTheme) {
+                    ide._editor.setTheme(theme);
+                }
+            });
+            uiEditorOptions.show();
+        }
+        else {
+            uiEditorOptions.hide();
+        }
+        const uiIqDownloadSlot = utilweb.$("#labelIQSlot");
+        if (ide.project.hwInterface != null && ide.project.hwInterface.name == "vexiq") {
+            const uiSelect = utilweb.$("#selectDownloadIQSlot");
+            const slot = _projectOptions && _projectOptions.optDownloadSlot ? _projectOptions.optDownloadSlot : "user1";
+            uiSelect.val(slot);
+            uiIqDownloadSlot.show();
+        }
+        else {
+            uiIqDownloadSlot.hide();
+        }
+        const uiV5DownloadSlot = utilweb.$("#labelV5Slot");
+        if (ide.project.hwInterface != null && ide.project.hwInterface.name == "vexv5") {
+            const uiSelect = utilweb.$("#selectDownloadV5Slot");
+            if (!_projectOptions || _projectOptions.optDownloadSlot == "ram") {
+                _projectOptions.optDownloadSlot = "user1";
+            }
+            const slot = _projectOptions.optDownloadSlot;
+            uiSelect.val(slot);
+            uiV5DownloadSlot.show();
+        }
+        else {
+            uiV5DownloadSlot.hide();
+        }
+        rmc_browser.fillPortsDropdown(_plugin);
+        const hasFirmwareUpdate = interface_monitor.firmware_update.isSupported();
+        utilweb.$("#startFirmwareUpdateLink")
+            .toggle(!ide.project.hasMimic() && hasFirmwareUpdate);
+        utilweb.showLightbox('#projectOptions');
+    }
+    function projectOptionsOk() {
+        if (ide._editor && ide._editor.getTheme) {
+            if (!ide.project.content.user_options) {
+                ide.project.content.user_options = {};
+            }
+            const theme = ide._editor.getTheme();
+            if (ide.project.content.user_options.ace_theme !== theme) {
+                ide.project.content.user_options.ace_theme = theme;
+                CurrentUser.saveUserSetting(ide.project.content.logged_in, "ace_theme", theme);
+            }
+        }
+        if (ide.project.hasMimic()) {
+            var arena_id = jQuery("#selectArena").val();
+            if (arena_id == "null") {
+                arena_id = null;
+            }
+            if (arena_id != ide.project.content.arena_project_id) {
+                datamanager.setArena(ide.project.content.project_id, arena_id)
+                    .done(function (data) {
+                    saveProjectOptions();
+                    location.reload();
+                });
+                return;
+            }
+        }
+        saveProjectOptions();
+        utilweb.hideLightbox('#projectOptions');
+    }
+    ide.projectOptionsOk = projectOptionsOk;
+    function onProgramTerminate() {
+        if (_plugin) {
+            interface_download.io.port = null;
+            _plugin.closeAllPorts();
+        }
+        if (_runtimeError) {
+            ui_status.fail(msg.DISCONNECTED_RUNTIME_ERROR_C + " " + _runtimeError);
+        }
+        else {
+            ui_status.info(msg.DISCONNECTED_PROGRAM_DONE_RUNNING);
+        }
+        sound.stop();
+        if (ide.project.hasMimic() || isEmscriptenConnectedMode()) {
+            ide.project.stop(false);
+            ide.mimicEngine.showStopWarning();
+            ui_status.done(msg.EMSCRIPTEN_PROGRAM_ENDED);
+            ui_status.appendOutput(msg.EMSCRIPTEN_PROGRAM_ENDED + "\n");
+        }
+        if (tutorial) {
+            tutorial.resolveUserEvent("userProgramDone");
+        }
+        uiUpdateReplayButton(false);
+        releaseEditor();
+    }
+    ide.onProgramTerminate = onProgramTerminate;
+    function processDataPacket(command, hexPayload) {
+        const isHandled = dbgr.processDataPacket(command, hexPayload);
+        if (isHandled && dbgr.getState() === dbgr.State.PausedOnError && tutorial) {
+            tutorial.resolveUserEvent("userProgramError");
+        }
+        switch (command) {
+            case rm_protocol.Command.SendDataStart:
+                dbgr.heap.onSendDataStart(hexPayload);
+                break;
+            case rm_protocol.Command.SendData:
+                dbgr.heap.onSendData(hexPayload);
+                break;
+            case rm_protocol.Command.SendDataEnd:
+                dbgr.heap.onSendDataEnd();
+                break;
+            case rm_protocol.Command.Echo:
+                if (interface_download.io.firstDebugPacket
+                    && hexPayload == "21") {
+                    ui_status.appendOutput(msg.RECEIVING_DEBUG_OVER_SERIAL = "Receiving debug over serial..." + "\n");
+                    interface_download.io.firstDebugPacket = false;
+                }
+                else {
+                    ui_status.appendOutput("\n" + msg.SP_ECHOED_BACK_C + " [" + hexPayload + "] " + util.hexToAscii(hexPayload) + "\n");
+                }
+                break;
+            case rm_protocol.Command.Ping:
+                ui_status.appendOutput("\n" + msg.SP_PING + "\n");
+                break;
+            case rm_protocol.Command.Terminate:
+                onProgramTerminate();
+                break;
+            case rm_protocol.Command.LogLine:
+                _bCreateProjectWithCode.show();
+                var code = util.hexToAscii(hexPayload);
+                _codeFromDevice += code + "\n";
+                ui_status.appendOutput(code + "\n", _addCodeSpan);
+                break;
+            case rm_protocol.Command.Error:
+                var error = util.hexToAscii(hexPayload);
+                _runtimeError = error;
+                ui_status.appendOutput(msg.ERROR_C + " " + error + "\n", (html) => {
+                    return '<span class="output-error">' + html + "</span>";
+                });
+                if (tutorial) {
+                    tutorial.resolveUserEvent("userProgramError");
+                }
+                break;
+            case rm_protocol.Command.TestFail:
+                var error = util.hexToAscii(hexPayload);
+                ui_status.appendOutput(msg.TEST_FAIL_C + " " + error, (html) => {
+                    return '<span class="output-testFail">' + html + "</span>";
+                });
+                break;
+            default:
+                if (!isHandled) {
+                    ui_status.appendOutput("\n" + msg.SP_UNHANDLED_COMMAND + " " +
+                        "0x" + command.toString(16) + " " +
+                        rm_protocol.Command[command] + "\n");
+                }
+                break;
+        }
+    }
+    ide.processDataPacket = processDataPacket;
+    function createProjectWithCode() {
+        const pt = db.getProjectType(ide.project.content.projecttype_id);
+        core_cmn.createRemoteProject({
+            name: "Received Code",
+            type: ide.project.content.projecttype_id,
+            codefile_name: pt.default_codefile_name,
+            code: _codeFromDevice,
+        })
+            .done((result) => {
+            utilweb.navigateToUrl(result.target);
+        })
+            .fail((error) => {
+            ui_status.fail(msg.FAILED_CREATING_NEW_PROJECT_C + " " + error);
+        });
+    }
+    function _addCodeSpan(text) {
+        return "<span class='code'>" + text + "</span>";
+    }
+    function processTextOutput(hex) {
+        if (hex != "") {
+            if (hex == "aa55330176") {
+                return;
+            }
+            let text = util.hexUtf8ToString(hex);
+            text = text.replace(/\0/g, "\n");
+            text = text.replace(/\nXXX/g, "\n");
+            text = text.replace(/^XXX/g, "");
+            text = text.replace(/\nXXE/g, "\nERROR: ");
+            text = text.replace(/^XXE/g, "ERROR: ");
+            ui_status.appendOutput(text, linkifyOutput);
+        }
+    }
+    ide.processTextOutput = processTextOutput;
+    function linkifyOutput(text) {
+        switch (ide.project.type.progLanguage) {
+            case ProgLanguage.Python:
+            case ProgLanguage.Python3:
+            case ProgLanguage.PythonB:
+            case ProgLanguage.BlocklyPython:
+            case ProgLanguage.BlocklyPythonB:
+            case ProgLanguage.FlowolPython:
+            case ProgLanguage.JoystickWizardPython:
+                {
+                    const cfname = "main(\\.py)?";
+                    text = text.replace(/File ["'].*pmImgCreator(\.py)?["'].*\r?\n/g, "");
+                    const pythonErrorRegex = new RegExp(`(File ["']${cfname}["'], line )(\\d+)(.*)`, 'gi');
+                    text = linkifyOutputFor(text, "error", pythonErrorRegex, false);
+                    const pythonExceptionRegex = /(EXCEPTION: .*)/gi;
+                    const replStr = '<span class="output-error">$1</span>';
+                    text = text.replace(pythonExceptionRegex, replStr);
+                }
+                break;
+            case ProgLanguage.C:
+            case ProgLanguage.Cpp:
+                {
+                    const cErrorRegex = /^\s*(main(\.c|\.cpp)?\()(\d+),?(\d+)?(\): error .*)/gim;
+                    text = linkifyOutputFor(text, "error", cErrorRegex, true);
+                    const cWarningRegex = /^\s*(main(\.c|\.cpp)?\()(\d+),?(\d+)?(\): warning .*)/gim;
+                    text = linkifyOutputFor(text, "warning", cWarningRegex, true);
+                    text = "<pre>" + text.replace(/<br\/>/g, "") + "</pre>";
+                }
+                break;
+            case ProgLanguage.JavaScript:
+                {
+                    const jsExceptionRegex = /^(Uncaught .*)/gm;
+                    const replStr = '<span class="output-error">$1</span>';
+                    text = text.replace(jsExceptionRegex, replStr);
+                    const jsErrorRegex = /^\s*(at.*\((user_main.js:))(\d+)(\).*)/gm;
+                    text = linkifyOutputFor(text, "error", jsErrorRegex, false);
+                }
+                break;
+        }
+        return text;
+    }
+    function linkifyOutputFor(text, type, regex, hasColumn) {
+        if (!ide._editor || !ide._editor.aceEditor) {
+            return text;
+        }
+        text = text.replace(regex, (substring, ...args) => {
+            const startText = args[0];
+            const row = parseInt(args[2]) - ide._editor.getDisplayRowOffset();
+            const col = hasColumn ? parseInt(args[3]) : 1;
+            const endText = (hasColumn ? args[4] : args[3]);
+            const Range = ace.require('ace/range').Range;
+            const session = ide._editor.aceEditor.getSession();
+            const range = new Range(row - 1, col - 1, row - 1, Infinity);
+            session.addMarker(range, type + "-underline", "text");
+            const gotoLineArgs = hasColumn ? row + "," + col : "" + row;
+            const newText = startText + (hasColumn ? row + ":" + col : "" + row) + endText;
+            const replStr = '<a href="#" class="output-' + type + '" onclick="eh_rmc_install.gotoLine('
+                + gotoLineArgs + ')">' + newText + '</a>';
+            return replStr;
+        });
+        return text;
+    }
+    function clearOutput() {
+        if (ide._editor) {
+            ide._editor.showErrorMarkers(null);
+        }
+        _bCreateProjectWithCode.hide();
+        _codeFromDevice = "";
+        _runtimeError = null;
+        ui_status.clearOutput();
+    }
+    function gotoLine(line, column) {
+        if (ide._editor && ide._editor.aceEditor) {
+            ide._editor.aceEditor.focus();
+            ide._editor.aceEditor.gotoLine(line, column, true);
+        }
+        return false;
+    }
+    ide.gotoLine = gotoLine;
+    function pasteConfigCode(editor) {
+        if (!ide._editor || !ide._editor.aceEditor) {
+            return;
+        }
+        const ace = ide._editor.aceEditor;
+        const range = ace.selection.getRange();
+        const code = ide._editor.aceEditor.getValue();
+        const newCode = prog_language.addInterfaceConfigCode(code, ide.project.type.progLanguage, false);
+        ace.setValue(newCode);
+        const lineCount = (code.match(/\n/g) || []).length;
+        const newLineCount = (newCode.match(/\n/g) || []).length;
+        const rowDelta = newLineCount - lineCount;
+        const newRange = {
+            start: { row: range.start.row + rowDelta, column: range.start.column },
+            end: { row: range.end.row + rowDelta, column: range.end.column }
+        };
+        ace.selection.setRange(newRange);
+    }
+    let copy_project_op;
+    (function (copy_project_op) {
+        function openDialog() {
+            ui.start();
+        }
+        copy_project_op.openDialog = openDialog;
+        let ui;
+        (function (ui) {
+            const P = "#copyProjectDialog ";
+            const ID_TITLE = P + ".dialogTitle";
+            const ID_PROJECT_NAME_LABEL = P + "#liProjectName label";
+            const ID_PROJECT_NAME = P + "#tbProjectName";
+            const ID_WARN_PROJECT_NAME = P + "#warnProjectName";
+            const ID_LI_PROJECT_OR_TEMPLATE = P + "#liProjectOrTemplate";
+            const ID_PROJECT = P + "#rbProject";
+            const ID_TEMPLATE = P + "#rbTemplate";
+            const ID_CAN_SUBMIT_RECORDING = P + "#cbCanSubmitMimicRecording";
+            const ID_LI_TEMPLATE_OPTIONS = "#liTemplateOptions";
+            const ID_LB_DELETE_SOURCE_PROJECT = P + "#lbDeleteSourceProject";
+            const ID_DELETE_SOURCE_PROJECT = P + "#cbDeleteSourceProject";
+            const ID_LI_STORE_AS = P + "#liStoreAs";
+            const ID_STORE_AS_ONLINE = P + "#rbStoreAsOnline";
+            const ID_STORE_AS_LOCAL = P + "#rbStoreAsLocal";
+            const ID_LI_PROJECT_TYPE = P + "#liProjectType";
+            const ID_PROJECT_TYPE = P + "#editProjectType";
+            const ID_LABEL_PROJECT_TYPE = P + "#labelProjectType";
+            const ID_WARN_PROJECT_TYPE = P + "#warnProjectType";
+            const ID_LI_INCLUDE = P + "#liInclude";
+            const ID_COPY_INTERFACE_CONFIG = P + "#cbCopyInterfaceConfig";
+            const ID_LB_COPY_DESCRIPTION = P + "#lbCopyDescription";
+            const ID_COPY_DESCRIPTION = P + "#cbCopyDescription";
+            const ID_WARN_COPY_DESCRIPTION = P + "#warnCopyDescription";
+            const ID_LB_COPY_CODE = P + "#lbCopyCode";
+            const ID_LABEL_COPY_CODE = P + "#labelCopyCode";
+            const ID_COPY_CODE = P + "#cbCopyCode";
+            const ID_WARN_COPY_CODE = P + "#warnCopyCode";
+            const ID_LB_COPY_MIMIC = P + "#lbCopyMimic";
+            const ID_COPY_MIMIC = P + "#cbCopyMimic";
+            const ID_WARN_COPY_MIMIC = P + "#warnCopyMimic";
+            const ID_OK = P + "#bOK";
+            const ID_CANCEL = P + "#bCancel";
+            let _fromType;
+            let _types;
+            let _initialized = false;
+            function start() {
+                if (!_initialized) {
+                    initialize();
+                }
+                _fromType = db.getProjectType(ide.project.content.projecttype_id);
+                utilweb.$(ID_PROJECT_NAME).val(ide.project.content.project_name + " - " + msg.COPY_SUFFIX);
+                utilweb.$(ID_DELETE_SOURCE_PROJECT).prop("checked", false);
+                if (utilweb.isStandaloneMode()) {
+                    const isLocal = utilweb.isLocalPage();
+                    selectStoreAs(isLocal);
+                    utilweb.$(ID_LI_STORE_AS).show();
+                }
+                else {
+                    utilweb.$(ID_LI_STORE_AS).hide();
+                    selectStoreAs(false);
+                }
+                const canCreateTemplate = !utilweb.isStandaloneMode() && ide.project.content.can_create_template;
+                if (canCreateTemplate) {
+                    utilweb.$(ID_LI_PROJECT_OR_TEMPLATE).show();
+                    selectProjectOrTemplate(false);
+                }
+                else {
+                    utilweb.$(ID_LI_PROJECT_OR_TEMPLATE).hide();
+                    selectProjectOrTemplate(false);
+                }
+                utilweb.showLightbox(P);
+                utilweb.$(ID_PROJECT_NAME).focus().select();
+            }
+            ui.start = start;
+            function initialize() {
+                _initialized = true;
+                if (utilweb.isStandaloneMode()) {
+                    utilweb.$(ID_STORE_AS_ONLINE).change(() => {
+                        selectStoreAs(false);
+                    });
+                    utilweb.$(ID_STORE_AS_LOCAL).change(() => {
+                        selectStoreAs(true);
+                    });
+                }
+                else {
+                    utilweb.$(ID_PROJECT).change(() => {
+                        selectProjectOrTemplate(false);
+                    });
+                    utilweb.$(ID_TEMPLATE).change(() => {
+                        selectProjectOrTemplate(true);
+                    });
+                }
+                utilweb.$(ID_OK).click(() => {
+                    utilweb.$("#messageDialog .dialogTitle").text(msg.PLEASE_WAIT);
+                    utilweb.$("#messageDialog .dialogText").text(msg.COPYING_THE_PROJECT);
+                    utilweb.hideLightbox(P);
+                    utilweb.showLightbox("#messageDialog");
+                    startCopy();
+                });
+                utilweb.$(ID_CANCEL).click(() => {
+                    utilweb.hideLightbox(P);
+                });
+            }
+            function startCopy() {
+                const isTemplate = utilweb.$(ID_TEMPLATE).prop("checked");
+                const canSubmitMimicRecording = utilweb.$(ID_CAN_SUBMIT_RECORDING).prop("checked");
+                const deleteSourceProject = (isTemplate && ide.project.content.can_delete) ?
+                    utilweb.$(ID_DELETE_SOURCE_PROJECT).prop("checked") : false;
+                const toType = isTemplate ? _fromType : getSelectedType();
+                const opt = {
+                    newProjectName: utilweb.$(ID_PROJECT_NAME).val(),
+                    targetIsLocal: utilweb.$(ID_STORE_AS_LOCAL).prop("checked"),
+                    targetType: toType,
+                    copyDescription: utilweb.$(ID_COPY_DESCRIPTION).prop("checked"),
+                    copyCode: utilweb.$(ID_COPY_CODE).prop("checked"),
+                    copyCodeIsExport: copyCodeIsExport(_fromType, toType),
+                    copyTutorialCode: true,
+                    setTutorialParent: false,
+                    copyMimic: utilweb.$(ID_COPY_MIMIC).prop("checked"),
+                    isTemplate: isTemplate,
+                    canSubmitMimicRecording: canSubmitMimicRecording,
+                    deleteSourceProject: deleteSourceProject,
+                };
+                doCopy(opt);
+            }
+            function selectStoreAs(isLocal) {
+                utilweb.$(ID_STORE_AS_ONLINE).prop("checked", !isLocal);
+                utilweb.$(ID_STORE_AS_LOCAL).prop("checked", isLocal);
+                if (utilweb.isStandaloneMode()) {
+                    utilweb.$(ID_LABEL_PROJECT_TYPE).text(isLocal ?
+                        msg.PROJECT_TYPE_LOCAL_C :
+                        msg.PROJECT_TYPE_ONLINE_C);
+                }
+                _types = fillTypes(isLocal);
+                const uiSelect = utilweb.$(ID_PROJECT_TYPE);
+                uiSelect.off('change');
+                uiSelect.on('change', (e) => {
+                    const toType = getSelectedType();
+                    selectCheckboxes(_fromType, toType);
+                });
+                const toType = getSelectedType();
+                selectCheckboxes(_fromType, toType);
+            }
+            function selectProjectOrTemplate(isTemplate) {
+                utilweb.$(ID_PROJECT).prop("checked", !isTemplate);
+                utilweb.$(ID_TEMPLATE).prop("checked", isTemplate);
+                const suffix = " - " + msg.COPY_SUFFIX;
+                const projectName = utilweb.$(ID_PROJECT_NAME).val();
+                if (isTemplate) {
+                    utilweb.$(ID_TITLE).text(msg.CREATE_TEMPLATE);
+                    utilweb.$(ID_PROJECT_NAME_LABEL).text(msg.TEMPLATE_NAME_C);
+                    utilweb.$(ID_LI_TEMPLATE_OPTIONS).show();
+                    utilweb.$(ID_LB_DELETE_SOURCE_PROJECT).toggle(ide.project.content.can_delete);
+                    utilweb.$(ID_LI_PROJECT_TYPE).hide();
+                    if (projectName.endsWith(suffix)) {
+                        const name = projectName.substr(0, projectName.length - suffix.length);
+                        utilweb.$(ID_PROJECT_NAME).val(name);
+                    }
+                }
+                else {
+                    utilweb.$(ID_TITLE).text(msg.COPY_TO_NEW_PROJECT);
+                    utilweb.$(ID_PROJECT_NAME_LABEL).text(msg.PROJECT_NAME_C);
+                    utilweb.$(ID_LI_TEMPLATE_OPTIONS).hide();
+                    utilweb.$(ID_LI_PROJECT_TYPE).show();
+                    if (!projectName.endsWith(suffix)) {
+                        const name = projectName + suffix;
+                        utilweb.$(ID_PROJECT_NAME).val(name);
+                    }
+                }
+            }
+            function getSelectedType() {
+                const uiSelect = utilweb.$(ID_PROJECT_TYPE);
+                const idx = uiSelect[0].selectedIndex;
+                if (idx === undefined || idx < 0) {
+                    throw new Error("No selected index");
+                }
+                return _types[idx];
+            }
+            function selectCheckboxes(fromType, toType) {
+                const ci = canCopy(fromType, toType);
+                utilweb.$(ID_COPY_DESCRIPTION).prop('checked', true);
+                utilweb.$(ID_COPY_INTERFACE_CONFIG).prop('checked', true);
+                utilweb.$(ID_COPY_INTERFACE_CONFIG).prop('disabled', true);
+                utilweb.$(ID_LB_COPY_CODE).toggleClass('disabled', !ci.canCopyCode);
+                utilweb.$(ID_LABEL_COPY_CODE).text(ci.copyCodeIsExport ? msg.CODE_EXPORT_GENERATED_CODE : msg.CODE);
+                utilweb.$(ID_COPY_CODE).prop('disabled', !ci.canCopyCode);
+                utilweb.$(ID_COPY_CODE).prop('checked', ci.canCopyCode);
+                utilweb.$(ID_WARN_COPY_CODE).text(ci.copyCodeWarning);
+                utilweb.$(ID_WARN_COPY_CODE).toggle(ci.copyCodeWarning !== undefined);
+                utilweb.$(ID_LB_COPY_MIMIC).toggle(ci.hasMimic);
+                utilweb.$(ID_LB_COPY_MIMIC).toggleClass('disabled', !ci.canCopyMimic);
+                utilweb.$(ID_COPY_MIMIC).prop('disabled', !ci.canCopyMimic);
+                utilweb.$(ID_COPY_MIMIC).prop('checked', ci.canCopyMimic);
+                utilweb.$(ID_WARN_COPY_MIMIC).text(ci.copyMimicWarning);
+                utilweb.$(ID_WARN_COPY_MIMIC).toggle(ci.copyMimicWarning !== undefined);
+            }
+            function fillTypes(isLocal) {
+                var pts = db.filterProjectTypes(isLocal, _fromType);
+                utilweb.updateUiList(ID_LI_PROJECT_TYPE, pts, (pt, uiItem) => {
+                    const current = pt === _fromType ?
+                        " " + msg.CURRENT_S : "";
+                    uiItem.text(pt.name + current);
+                }, _fromType, "select", "option");
+                return pts;
+            }
+        })(ui || (ui = {}));
+        function canCopy(fromType, toType) {
+            let ci = {
+                canCopyCode: true,
+                copyCodeIsExport: false,
+                hasMimic: true,
+                canCopyMimic: true,
+            };
+            if (fromType.mimic_module) {
+                if (!toType.mimic_module) {
+                    ci.canCopyMimic = false;
+                    ci.copyMimicWarning = msg.NEW_PROJECT_DOES_NOT_SUPPORT_MIMICS;
+                }
+                else if (toType.mimic_module !== fromType.mimic_module &&
+                    toType.mimic_module != "arena") {
+                    ci.canCopyMimic = false;
+                    ci.copyMimicWarning = msg.NEW_PROJECT_HAS_DIFFERENT_MIMIC_TYPE;
+                }
+            }
+            else {
+                ci.hasMimic = false;
+            }
+            if (!canCopyOrExportCode(fromType, toType)) {
+                ci.canCopyCode = false;
+                ci.copyCodeWarning = msg.EXPORTING_CODE_NOT_SUPPORTED;
+            }
+            ci.copyCodeIsExport = copyCodeIsExport(fromType, toType);
+            return ci;
+        }
+        function canCopyOrExportCode(fromType, toType) {
+            return (fromType.interface_id === toType.interface_id &&
+                (fromType.progLanguage === toType.progLanguage ||
+                    fromType.exportProgLanguage === toType.progLanguage));
+        }
+        function copyCodeIsExport(fromType, toType) {
+            return (fromType.interface_id === toType.interface_id &&
+                fromType.exportProgLanguage === toType.progLanguage);
+        }
+        function doCopy(opt) {
+            if (!ide.project.content.restrictions.can_copy) {
+                ui_status.fail(msg.NOT_PERMITTED_TO_COPY_PROJECT);
+                return;
+            }
+            save_op.save().done(() => {
+                const options = getProjectOptions();
+                let description;
+                if (opt.copyDescription) {
+                    description = getTinyMceContent();
+                }
+                else {
+                    description = opt.targetType.default_description;
+                }
+                let code = "";
+                if (opt.copyCode) {
+                    const sourceOnly = opt.copyCodeIsExport;
+                    if (sourceOnly) {
+                        options.optCodePaneRight = false;
+                    }
+                    const codeRes = ide._editor.getCode(sourceOnly);
+                    code = codeRes.code;
+                    if (codeRes.errors && codeRes.errors.length > 0) {
+                        ui_status.fail(msg.ERROR_EXPORTING_C + " " + codeRes.errors[0].message);
+                        return false;
+                    }
+                }
+                else {
+                    code = opt.targetType.default_codefile_code;
+                    options.optCodePaneRight = false;
+                }
+                if (ide.project.hwInterface != null && opt.targetType.id != ProjectTypeId.Arena) {
+                    code = prog_language.addInterfaceConfigCode(code, opt.targetType.progLanguage, true);
+                }
+                let model = null;
+                if (opt.copyMimic && ide.mimicEngine != null) {
+                    model = ide.mimicEngine.saveData();
+                }
+                if (model === null) {
+                    options.optMimicEditorRight = false;
+                }
+                let templateFlags = core_cmn.TemplateFlags.None;
+                if (opt.isTemplate) {
+                    templateFlags = core_cmn.TemplateFlags.MimicTemplate;
+                    templateFlags |= opt.canSubmitMimicRecording ? core_cmn.TemplateFlags.CanSubmitMimicRecording : 0;
+                }
+                let tutorialCode = "";
+                let tutorialParent = ide.project.content.tutorial_parent;
+                if (opt.copyTutorialCode && tutorial && tutorial.editor) {
+                    tutorialCode = tutorial.editor.getCode().code;
+                }
+                if (opt.setTutorialParent) {
+                    if (ide.project.hasEditableTutorial()) {
+                        tutorialParent = ide.project.content.project_id;
+                        options.optTutorialEditorLeft = false;
+                    }
+                    else {
+                        tutorialParent = ide.project.content.tutorial_parent;
+                    }
+                }
+                const args = {
+                    name: opt.newProjectName,
+                    type: opt.targetType.id,
+                    codefile_name: opt.targetType.default_codefile_name,
+                    description: description,
+                    code: code,
+                    tutorial_code: tutorialCode,
+                    tutorial_run_state: null,
+                    tutorial_parent: tutorialParent,
+                    model: model,
+                    options: JSON.stringify(options),
+                    folder: ide.project.content.projectfolder_id,
+                    original_project_id: ide.project.content.project_id,
+                    template_flags: templateFlags,
+                    delete_original_project: opt.deleteSourceProject,
+                    arena_project_id: ide.project.content.arena_project_id
+                };
+                createAndOpenProject(opt.targetIsLocal, args);
+            })
+                .fail((error) => {
+                ui_status.fail(msg.SAVE_FAILED);
+                utilweb.hideLightbox("#messageDialog");
+            });
+        }
+        copy_project_op.doCopy = doCopy;
+        function createAndOpenProject(targetIsLocal, args) {
+            if (targetIsLocal) {
+                try {
+                    const p = window.module_db_local.createProject(args.name, args.type, args.code, args.description, JSON.parse(args.options));
+                    let target = utilweb.getLocalUrl("project.html?id=" + p.id);
+                    if (utilweb.isFuture()) {
+                        target = utilweb.addFutureParam(target);
+                    }
+                    utilweb.navigateToUrl(target);
+                }
+                catch (e) {
+                    ui_status.fail(msg.FAILED_TO_COPY_PROJECT_LOCAL_C + " " + e.message);
+                    utilweb.hideLightbox("#messageDialog");
+                }
+            }
+            else {
+                if (utilweb.isLocalPage()) {
+                    const urlQuery = jQuery.param(args);
+                    let url = utilweb.getRobotMeshBaseUrl() + "/studio/index/create?" + urlQuery;
+                    if (utilweb.isFuture()) {
+                        url = utilweb.addFutureParam(url);
+                    }
+                    utilweb.navigateToUrl(url);
+                }
+                else {
+                    core_cmn.createRemoteProject(args)
+                        .done((result) => {
+                        if (args.template_flags && ide.project.hasMimic()) {
+                            saveMimicThumbnail(result.project_id);
+                        }
+                        let target = result.target;
+                        if (utilweb.isFuture()) {
+                            target = utilweb.addFutureParam(target);
+                        }
+                        loadProject(result.project_id).then(() => { utilweb.hideLightbox(".lightbox"); });
+                    })
+                        .fail((error) => {
+                        ui_status.fail(msg.FAILED_TO_COPY_PROJECT_REMOTE_C + " " + error);
+                        utilweb.hideLightbox("#messageDialog");
+                    });
+                }
+            }
+        }
+    })(copy_project_op || (copy_project_op = {}));
+    let save_op;
+    (function (save_op) {
+        const LOG = "save_op";
+        let AutosaveStatus;
+        (function (AutosaveStatus) {
+            AutosaveStatus[AutosaveStatus["Inactive"] = 0] = "Inactive";
+            AutosaveStatus[AutosaveStatus["Suspended"] = 1] = "Suspended";
+            AutosaveStatus[AutosaveStatus["LoadingMimic"] = 2] = "LoadingMimic";
+            AutosaveStatus[AutosaveStatus["Active"] = 3] = "Active";
+            AutosaveStatus[AutosaveStatus["SavePending"] = 4] = "SavePending";
+            AutosaveStatus[AutosaveStatus["Saving"] = 5] = "Saving";
+            AutosaveStatus[AutosaveStatus["SaveDone"] = 6] = "SaveDone";
+            AutosaveStatus[AutosaveStatus["SaveFailed"] = 7] = "SaveFailed";
+        })(AutosaveStatus || (AutosaveStatus = {}));
+        var _autosaveStatus = AutosaveStatus.Inactive;
+        let AutosaveConfig = {
+            checkPeriodSec: 2,
+            saveOnAggressiveSec: 2,
+            saveOnIdleSec: 20,
+            saveOnBusySec: 90,
+            saveTimeoutSec: 20,
+        };
+        var _savedData = null;
+        var _lastSaveTimeMs = Date.now();
+        function init(code, tutorialCode, tutorialRunState, description, mimicModel, arena_score, metrics) {
+            setStatus(AutosaveStatus.Inactive);
+            _savedData = {
+                project_id: ide.project.content.project_id,
+                codefile_id: ide.project.content.codefile_id,
+                code: (code ? code : ""),
+                tutorial_code: (tutorialCode ? tutorialCode : ""),
+                tutorial_run_state: tutorialRunState,
+                description: (description ? description : ""),
+                model: (mimicModel ? mimicModel : ""),
+                arena_score: JSON.stringify(arena_score),
+                metrics: JSON.stringify(metrics),
+            };
+            _lastSaveTimeMs = Date.now();
+        }
+        save_op.init = init;
+        function getSavedCode() {
+            return _savedData ? _savedData.code : "";
+        }
+        save_op.getSavedCode = getSavedCode;
+        var _monitoringActivity = false;
+        var _checkHandle = null;
+        var _idleTimeSec = 0;
+        function autosaveStart() {
+            if (utilweb.isTestMode()) {
+                return;
+            }
+            if (!ide.project.content.can_save) {
+                return;
+            }
+            if (_autosaveStatus !== AutosaveStatus.Inactive &&
+                _autosaveStatus !== AutosaveStatus.Suspended &&
+                _autosaveStatus !== AutosaveStatus.LoadingMimic) {
+                return;
+            }
+            setStatus(AutosaveStatus.Active);
+            if (!_monitoringActivity) {
+                _idleTimeSec = 0;
+                _monitoringActivity = true;
+                jQuery(document).mousemove((e) => {
+                    _idleTimeSec = 0;
+                });
+                jQuery(document).keypress((e) => {
+                    _idleTimeSec = 0;
+                });
+            }
+            _checkHandle = setInterval(() => autosaveCheck(), AutosaveConfig.checkPeriodSec * 1000);
+        }
+        save_op.autosaveStart = autosaveStart;
+        var _suspendTooltip;
+        function autosaveSuspend(suspendTooltip) {
+            _suspendTooltip = suspendTooltip;
+            autosaveStop(true);
+        }
+        save_op.autosaveSuspend = autosaveSuspend;
+        function autosaveStop(suspend = false) {
+            if (!ide.project.content.can_save) {
+                return;
+            }
+            if (_checkHandle !== null) {
+                clearInterval(_checkHandle);
+            }
+            _checkHandle = null;
+            setStatus(suspend ? AutosaveStatus.Suspended : AutosaveStatus.Inactive);
+        }
+        save_op.autosaveStop = autosaveStop;
+        function autosaveExit() {
+            autosaveStop();
+            _savedData = null;
+        }
+        save_op.autosaveExit = autosaveExit;
+        function loadingMimic() {
+            setStatus(AutosaveStatus.LoadingMimic);
+        }
+        save_op.loadingMimic = loadingMimic;
+        function autosaveCheck() {
+            if (_autosaveStatus === AutosaveStatus.Saving) {
+                return;
+            }
+            if (_autosaveStatus === AutosaveStatus.Active ||
+                _autosaveStatus === AutosaveStatus.SaveDone ||
+                _autosaveStatus === AutosaveStatus.SaveFailed) {
+                const editorDirty = ide._editor && !ide._editor.isClean();
+                const imDirty = (ide.project.getState() != null) && !ide.project.getState().isClean();
+                const mimicDirty = ide.project.hasMimic() && !ide.mimicEngine.isClean();
+                const descriptionDirty = tinyMCE && tinyMCE.activeEditor && !tinyMCE.activeEditor.isNotDirty;
+                const tutorialDirty = ide.project.hasEditableTutorial() && tutorial.editor && !tutorial.editor.isClean();
+                const tutorialRunStateDirty = ide.project.hasRunnableTutorial() && tutorial && !tutorial.run_state.isClean();
+                if (editorDirty || imDirty || mimicDirty || descriptionDirty
+                    || tutorialDirty || tutorialRunStateDirty) {
+                    setStatus(AutosaveStatus.SavePending);
+                }
+            }
+            if (_idleTimeSec >= AutosaveConfig.saveOnIdleSec) {
+                util.log(LOG, "autosave on idle");
+                _idleTimeSec = 0;
+                save();
+            }
+            else if ((Date.now() - _lastSaveTimeMs) / 1000 >=
+                AutosaveConfig.saveOnBusySec) {
+                util.log(LOG, "autosave on busy");
+                _idleTimeSec = 0;
+                save();
+            }
+            else if (ide.project.hasEditableTutorial() && _idleTimeSec >= AutosaveConfig.saveOnAggressiveSec) {
+                util.log(LOG, "aggressive autosave with editable tutorial");
+                _idleTimeSec = 0;
+                save();
+            }
+            else {
+                _idleTimeSec += AutosaveConfig.checkPeriodSec;
+            }
+        }
+        const ID_AUTOSAVE = "#projectAutosaveStatus";
+        function setStatus(status) {
+            if (status === _autosaveStatus) {
+                return;
+            }
+            _autosaveStatus = status;
+            let message = "";
+            let tooltip = "";
+            switch (status) {
+                case AutosaveStatus.Inactive:
+                    message = "";
+                    break;
+                case AutosaveStatus.LoadingMimic:
+                case AutosaveStatus.Suspended:
+                    message = msg.AUTOSAVE_SUSPENDED;
+                    tooltip = _suspendTooltip;
+                    break;
+                case AutosaveStatus.Active:
+                    message = msg.AUTOSAVE_ACTIVE;
+                    break;
+                case AutosaveStatus.SavePending:
+                case AutosaveStatus.Saving:
+                    message = msg.SAVE_PENDING;
+                    break;
+                case AutosaveStatus.SaveDone:
+                    message = msg.SAVED_DONE;
+                    break;
+                case AutosaveStatus.SaveFailed:
+                    message = msg.SAVE_FAILED;
+                    break;
+            }
+            utilweb.$(ID_AUTOSAVE)
+                .text(message)
+                .attr("title", tooltip);
+        }
+        function canSaveOnUnload() {
+            return _autosaveStatus != AutosaveStatus.LoadingMimic;
+        }
+        save_op.canSaveOnUnload = canSaveOnUnload;
+        function save(async = true) {
+            const dfd = jQuery.Deferred();
+            if (!ide.project || !ide.project.content || !ide.project.content.can_save) {
+                dfd.resolve();
+                return dfd.promise();
+            }
+            if (ide.project.hasMimic()) {
+                ide.mimicEngine.prepareSave();
+            }
+            const newSaveArgs = getDataToSave();
+            if (!newSaveArgs) {
+                _lastSaveTimeMs = Date.now();
+                util.log(LOG, "save: already saved, skipping");
+                dfd.resolve();
+                return dfd.promise();
+            }
+            setStatus(AutosaveStatus.Saving);
+            saveCore(newSaveArgs, async)
+                .done((isSaved) => {
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString();
+                if (isSaved) {
+                    setStatus(AutosaveStatus.SaveDone);
+                }
+                dfd.resolve(isSaved);
+            }).fail((err) => {
+                setStatus(AutosaveStatus.SaveFailed);
+                ui_status.fail(err);
+                dfd.reject(err);
+            });
+            return dfd.promise();
+        }
+        save_op.save = save;
+        function getDataToSave() {
+            const code = ide._editor.getCode().code;
+            let tutorialCode = "";
+            let tutorialRunState = 0;
+            if (tutorial) {
+                tutorialCode = tutorial.editor ? tutorial.editor.getCode().code : "";
+                tutorialRunState = tutorial.run_state.get();
+            }
+            const description = getTinyMceContent();
+            let mimicModel = null;
+            if (ide.project.hasMimic()) {
+                mimicModel = ide.mimicEngine.saveData();
+            }
+            if (mimicModel === null) {
+                mimicModel = ide.project.content.model;
+            }
+            if (ide.project.hasMimic()) {
+                const latestScore = mimic.getHighScore();
+                if (!ide.project.content.arena_score.high_score || latestScore.score > ide.project.content.arena_score.high_score) {
+                    ide.project.content.arena_score.high_score = latestScore.score;
+                }
+            }
+            const newSaveData = {
+                project_id: ide.project.content.project_id,
+                codefile_id: ide.project.content.codefile_id,
+                code: code,
+                tutorial_code: tutorialCode,
+                tutorial_run_state: tutorialRunState,
+                description: description,
+                model: mimicModel,
+                arena_score: JSON.stringify(ide.project.content.arena_score),
+                metrics: JSON.stringify(ide.project.content.metrics),
+            };
+            if (util.deepEquals(newSaveData, _savedData)) {
+                return null;
+            }
+            return newSaveData;
+        }
+        function saveCore(saveArgs, async) {
+            const dfd = jQuery.Deferred();
+            let startTimeMs = Date.now();
+            util.log(LOG, "save: sending...");
+            if (!async) {
+                let result = datamanager.saveProjectBeacon(saveArgs);
+                dfd.resolve(result);
+                return dfd.promise();
+            }
+            datamanager.saveProject(saveArgs)
+                .done((data) => {
+                util.log(LOG_TIME, "saveCore", Date.now() - startTimeMs);
+                let result;
+                try {
+                    result = JSON.parse(data);
+                }
+                catch (e) {
+                    dfd.reject(msg.SAVE_FAILED_C + " " + e.message);
+                    return;
+                }
+                if (result.error) {
+                    dfd.reject(msg.SAVE_FAILED_C + " " + result.error);
+                    return;
+                }
+                _lastSaveTimeMs = Date.now();
+                util.log(LOG, "save: saved");
+                _savedData = saveArgs;
+                ide.project.content.model_id = result.model_id;
+                ide._editor.markClean();
+                if (tutorial && tutorial.editor) {
+                    if (tutorial.editor) {
+                        tutorial.editor.markClean();
+                    }
+                    tutorial.run_state.markClean();
+                }
+                if (ide.project.getState() != null) {
+                    ide.project.getState().markClean();
+                }
+                if (ide.project.hasMimic()) {
+                    ide.mimicEngine.markClean();
+                }
+                if (tinyMCE && tinyMCE.activeEditor) {
+                    tinyMCE.activeEditor.isNotDirty = true;
+                }
+                dfd.resolve(true);
+            })
+                .fail((err) => {
+                dfd.reject(msg.SAVE_FAILED_C + " " + err.statusText);
+            });
+            return dfd.promise();
+        }
+    })(save_op = ide.save_op || (ide.save_op = {}));
+    async function openDevicePort(isUser = false) {
+        const plugin = await rmc_browser.start();
+        const dl = ide.project.hwInterface.getDownloader();
+        const portName = await rmc_browser.getSelectedPort(plugin, isUser ? dl.usbUserDeviceType : dl.usbDeviceType);
+        console.log("openDevicePort:", portName);
+        const port = await plugin.createPort(portName, dl.portSettings);
+        return port;
+    }
+    ide.openDevicePort = openDevicePort;
+    let html_event_handler;
+    (function (html_event_handler) {
+        function gotoLine(line, column) {
+            ide.gotoLine(line, column);
+        }
+        html_event_handler.gotoLine = gotoLine;
+        function openDialog() {
+            rmc_install.openDialog();
+        }
+        html_event_handler.openDialog = openDialog;
+    })(html_event_handler || (html_event_handler = {}));
+    window.eh_rmc_install = html_event_handler;
+})(ide || (ide = {}));
+//# sourceMappingURL=ide.js.map

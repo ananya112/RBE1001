@@ -1,0 +1,1653 @@
+#mimic_tab {
+    background-color: #14171b;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-font-smoothing: antialiased;
+    -ms-font-smoothing: antialiased;
+    -o-font-smoothing: antialiased;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -o-user-select: none;
+    user-select: none;
+}
+
+#mimic_tab *:focus {
+    outline: none;
+}
+
+#mimic_tab img, 
+#mimic_tab form, 
+#mimic_tab input[type="text"], 
+#mimic_tab input[type="submit"], 
+#mimic_tab button {
+	border: 0px;
+	margin: 0px;
+	padding: 0px;
+}
+
+#mimic_tab input[type="text"],
+#mimic_tab input[type="submit"],
+#mimic_tab select {
+    font: 400 11px /*'Open Sans',*/ sans-serif;
+    -webkit-user-select: text;
+    -khtml-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    -o-user-select: text;
+    user-select: text;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -moz-font-smoothing: antialiased;
+}
+
+*.unselectable {
+   -webkit-user-select: none;
+   -khtml-user-select: none;
+   -moz-user-select: none;
+   -ms-user-select: none;
+   -o-user-select: none;
+   user-select: none;
+}
+
+/*@font-face {
+    font-family: "Open Sans";
+    font-style: normal;
+    font-weight: 300;
+    src: url(/studio/static/mimics/assets/fonts/OpenSans-Light.ttf);
+}
+
+@font-face {
+    font-family: "Open Sans";
+    font-style: normal;
+    font-weight: 400;
+    src: url(/studio/static/mimics/assets/fonts/OpenSans-Regular.ttf);
+}
+
+@font-face {
+    font-family: "Open Sans";
+    font-style: normal;
+    font-weight: 600;
+    src: url(/studio/static/mimics/assets/fonts/OpenSans-Semibold.ttf);
+}
+
+@font-face {
+    font-family: "Open Sans";
+    font-style: normal;
+    font-weight: 800;
+    src: url(/studio/static/mimics/assets/fonts/OpenSans-Bold.ttf);
+}*/
+
+#curtain {
+    height: 100%;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+.sprite {
+	background-image: url(/studio/static/mimics/assets/images/sprite-workshop@2x.png);
+	background-repeat: no-repeat;
+	background-size: 250px;
+}
+
+/* SCROLLER */
+.nano {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+.nano > .nano-content {
+  position: absolute;
+  overflow: scroll;
+  overflow-x: hidden;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+.nano > .nano-content::-webkit-scrollbar {
+  display: none;
+}
+.has-scrollbar > .nano-content::-webkit-scrollbar {
+  display: block;
+}
+.nano > .nano-pane {
+  background: #212325;
+  position: absolute;
+  width: 7px;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  visibility: hidden\9; /* Target only IE7 and IE8 with this hack */
+  opacity: 0;
+  -webkit-transition: .2s;
+  -moz-transition: .2s;
+  -o-transition: .2s;
+  transition: .2s;
+  -moz-border-radius: 0px;
+  -webkit-border-radius: 0px;
+  border-radius: 0px;
+}
+.nano > .nano-pane > .nano-slider {
+  background: #61686e;
+  cursor: pointer;
+  position: relative;
+}
+.nano:hover > .nano-pane, .nano-pane.active, .nano-pane.flashed {
+  visibility: visible\9; /* Target only IE7 and IE8 with this hack */
+  opacity: 1;
+}
+
+/* ALERT */
+#alert {
+    background: #e9eff4;
+    box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.2);
+    color: #6f767e;
+    left: 50%;
+    margin: 100px -250px 0px -250px;
+    position: fixed;
+    width: 500px;
+    z-index: 1001;
+}
+
+#alert > .header {
+    background-color: #d7dee4;
+    padding-top: 15px;
+}
+
+#alert > .header > .icon {
+    background: url(/studio/static/mimics/assets/images/workshop-sprite.png) -230px -80px;
+    height: 64px;
+    margin: 0px auto;
+    width: 58px;
+}
+
+#alert > .header > .label {
+    font-size: 30px;
+    font-weight: 800;
+    margin-top: 5px;
+    padding-bottom: 10px;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+#alert > .text {
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.6em;
+    margin: 0px 10px;
+    padding: 35px 0px;
+    text-align: center;
+}
+
+#alert > .buttons {
+    height: 50px;
+    padding-bottom: 10px;
+}
+
+#alert > .buttons > div {
+    background-color: #676E75;
+    color: #fff;
+    cursor: pointer;
+    float: left;
+    font-size: 13px;
+    font-weight: 600;
+    height: 50px;
+    line-height: 50px;
+    margin-left: 10px;
+    position: relative;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+#alert .buttons div.selected {
+    background-color: #2653A7;
+}
+
+#alert .buttons div:hover {
+    background-color: #fe9900;
+    transition: all 0.2s ease-out;
+    -webkit-transition: all 0.2s ease-out;
+    -moz-transition: all 0.2s ease-out;
+    -ms-transition: all 0.2s ease-out;
+    -o-transition: all 0.2s ease-out;
+}
+
+#group-name .close {
+    background-color: #b5bfc8;
+    border-style: solid;
+    border-color: #e9eff4;
+    border-bottom-width: 5px;
+    border-left-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 5px;
+    cursor: pointer;
+    height: 2px;
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    width: 8px;
+}
+
+#group-name .close:hover {
+    background-color: #e9eff4;
+    border-color: #828a93;
+}
+
+/* LOADING */
+#loading {
+    height: 78px;
+    left: 50%;
+    margin: 100px -285px 0px -285px;
+    position: fixed;
+    width: 570px;
+    z-index: 1001;
+}
+
+#loading .part {
+    background: url(/studio/static/mimics/assets/images/workshop-sprite.png) -374px -84px;
+    background-color: rgba(16, 18, 21, 0.8);
+    border: 4px solid #86c932;
+    border-radius: 50%;
+    height: 70px;
+    left: 0px;
+    position: absolute;
+    top: 0px;
+    width: 70px;
+}
+
+#loading > .track {
+    background-color: rgba(16, 18, 21, 0.8);
+    border-bottom-right-radius: 7px;
+    border-top-right-radius: 7px;
+    height: 14px;
+    margin: 32px 0px 32px 77px;
+    width: 493px;
+}
+
+#loading > .track > .bar {
+    background-color: #86c932;
+    border-bottom-right-radius: 7px;
+    border-top-right-radius: 7px;
+    height: 14px;
+    width: 0px;
+}
+
+#loading > .parts {
+    color: #86c932;
+    font-size: 18px;
+    font-weight: 600;
+    left: 90px;
+    position: absolute;
+    top: 55px;
+}
+
+#loading .parts > .num {
+    color: #86c932;
+}
+
+/* HEADER */
+header {
+    height: 30px;
+    width: 100%;
+}
+
+header .logo-wrapper {
+    float: left;
+    height: 30px;
+}
+
+header .logo {
+    background-position: -80px -30px;
+    display: block;
+    float: left;
+    height: 16px;
+    margin: 7px 10px 0px 10px;
+    width: 16px;
+}
+
+header .logo-wrapper .text {
+    color: #ffffff;
+    display: block;
+    float: left;
+    font-size: 15px;
+    line-height: 30px;
+    font-weight: 600;
+    margin-right: 30px;
+    text-decoration: none;
+    text-shadow: 1px 1px 2px #000000;
+	text-transform: uppercase;
+}
+
+header .logo-wrapper .text .blue {
+    color: #8fcbf0;
+}
+
+header nav {
+    float: left;
+    font-size: 13px;
+    height: 30px;
+    width: 100%;
+}
+
+header nav ul {
+    list-style: none;
+    margin: 0px;
+    padding: 0px;
+}
+
+header nav ul.left {
+    float: left;
+}
+
+header nav ul.right {
+    float: right;
+}
+
+header nav li {
+    color: #fff;
+    float: left;
+    position: relative;
+}
+
+header nav li > a,
+header nav li span {
+    color: #fff;
+    cursor: pointer;
+    display: inline-block;
+    font-weight: 600;
+    height: 30px;
+    line-height: 30px;
+    padding: 0px 10px;
+    text-decoration: none;
+}
+
+header nav li > a:hover,
+header nav li span:hover,
+header nav li.active,
+#fullscreen:hover {
+    background-color: #2653A7;
+}
+
+#header-notifications {
+	background-color: #ed1c24;
+	border-radius: 2px;
+	font-size: 11px;
+	height: 20px;
+	line-height: 20px;
+	margin-left: 10px;
+	padding: 0px 5px;
+	position: relative;
+	top: -1px;
+}
+
+header .menu {
+    background-color: rgba(233, 239, 244, 1);
+    display: none;
+    left: 0px;
+    padding: 3px 0px;
+    position: absolute;
+    top: 30px;
+    width: 200px;
+    z-index: 2;
+}
+
+header .menu .item {
+    color: #14171b;
+    cursor: pointer;
+    height: 30px;
+    line-height: 30px;
+    padding-left: 10px;
+}
+
+header .menu .item:hover,
+header .menu .item:hover a {
+    background-color: #2653A7;
+    color: #ffffff;
+}
+
+header .menu .item a {
+    color: #14171b;
+    text-decoration: none;
+}
+
+header .menu .item.disabled {
+    color: #A3A2A4;
+}
+
+header .menu .item.disabled:hover {
+    background-color: transparent;
+    cursor: default;
+}
+
+/* PARAMETERS */
+#params {
+    height: 30px;
+    width: 100%;
+/* Removed so we can see the camera menu */
+/*  overflow-y: hidden;*/
+}
+
+#stopwarning {
+    color: #fff;
+    line-height: 30px;
+    padding-left: 15px;
+    font-weight: bold;
+    float:left;
+}
+
+#tool-connect {
+    color: #fff;
+    line-height: 30px;
+    padding-left: 15px;
+    padding-right: 15px;
+    font-weight: bold;
+    float:left;
+    cursor: pointer;
+}
+
+#tool-connect:hover,
+#tool-connect:hover a{
+    background-color: #2653A7;
+    color: #ffffff;
+}
+
+#params-camera {
+    background-color: #61686e;
+    background-position: -130px -70px;
+    cursor: pointer;
+    float: left;
+    height: 20px;
+    margin-left: 12px;
+    margin-top: 5px;
+    position: relative;
+    width: 40px;
+}
+
+#params-camera:hover {
+	background-color: #2653A7;
+}
+
+#params-camera .dummy {
+    height: 20px;
+    position: absolute;
+    width: 100%;
+}
+
+#params ul {
+    background-color: rgba(233, 239, 244, 1);
+    display: none;
+    list-style: none;
+    margin: 20px 0px 0px 0px;
+    padding: 3px 0px;
+    position: absolute;
+    width: 200px;
+    z-index: 2;
+}
+
+#params ul li {
+    color: #14171b;
+    cursor: pointer;
+    display: block;
+    font-size: 12px;
+    font-weight: 400;
+    height: 30px;
+    line-height: 30px;
+    margin: 0px;
+    padding: 0px 10px;
+}
+
+#params ul li .shortcut {
+	float: right;
+	font-size: 10px;
+}
+
+#params ul li:hover {
+    background-color: #2653A7;
+    color: #fff;
+}
+
+#params ul li.separator {
+	border-bottom: 1px solid #d7dce0;
+	height: 0px;
+	margin: 5px 0px;
+}
+
+#params .item {
+    cursor: pointer;
+    float: left;
+    height: 20px;
+    margin-top: 5px;
+    margin-left: 12px;
+    width: 22px;
+}
+
+#params .item.active {
+    background-color: #61686e;
+}
+
+#params .item:hover {
+	background-color: #2653A7;
+}
+
+#undo {
+	background-position: 0px -70px;
+}
+
+#redo {
+	background-position: -25px -70px;
+}
+
+#undo.disabled,
+#redo.disabled {
+	cursor: default;
+	opacity: 0.3;
+	filter: alpha(opacity=30);
+}
+
+#undo.disabled:hover,
+#redo.disabled:hover {
+	background-color: transparent;
+}
+
+#param-gridHelper {
+    background-position: -55px -70px;
+}
+
+#param-rendering-shaded {
+    background: url(/studio/static/mimics/assets/images/workshop-sprite.png) -70px -80px;
+}
+
+#param-rendering-shadedWithEdges {
+    background: url(/studio/static/mimics/assets/images/workshop-sprite.png) -100px -60px;
+}
+
+/*#param-rendering-wireframe {
+    background: url(/studio/static/mimics/assets/images/workshop-sprite.png) -100px -80px;
+}*/
+
+#param-grid-small {
+    background-position: -80px -70px;
+}
+
+#param-grid-medium {
+    background-position: -55px -70px;
+}
+
+#param-grid-large {
+    background-position: -105px -70px;
+}
+
+#param-gizmo-both {
+    background: url(/studio/static/mimics/assets/images/workshop-sprite.png) -360px -80px;
+}
+
+#param-gizmo-translate {
+    background: url(/studio/static/mimics/assets/images/workshop-sprite.png) -300px -80px;
+}
+
+#param-gizmo-rotate {
+    background: url(/studio/static/mimics/assets/images/workshop-sprite.png) -330px -80px;
+}
+
+#param-gizmo-auto {
+    background: url(/studio/static/mimics/assets/images/workshop-sprite.png) -390px -80px;
+}
+
+#param-gizmo-space {
+    background-color: #61686e;
+    cursor: pointer;
+    float: left;
+    height: 20px;
+    margin-top: 5px;
+    margin-left: 12px;
+    position: relative;
+}
+
+#param-gizmo-space:hover {
+    background-color: #2653A7;
+}
+
+#param-gizmo-space .label {
+    color: #fff;
+    font-size: 12px;
+    line-height: 20px;
+    padding-left: 7px;
+    width: 60px;
+}
+
+#param-gizmo-space .label::after {
+    background: url(/studio/static/mimics/assets/images/workshop-sprite.png) 0px -170px;
+    content: '';
+    display: block;
+    float: right;
+    height: 20px;
+    width: 19px;
+}
+
+#param-gizmo-space select {
+    background-color: transparent;
+    border: 0;
+    border-radius: 0;
+    cursor: pointer;
+    height: 20px;
+    left: 0px;
+    opacity: 0;
+    filter: alpha(opacity=0);
+    position: absolute;
+    top: 0px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    width: 100%;
+}
+
+#params > .separator {
+    background-color: #61686e;
+    float: left;
+    height: 22px;
+    margin: 4px 0px 0px 12px;
+    width: 1px;
+}
+
+#main::after {
+    content: '';
+    display: block;
+    clear: both;
+    width: 100%;
+}
+
+/* CENTRE */
+#column-centre {
+    float: left;
+}
+
+#column-centre::after {
+    content: '';
+    display: block;
+    clear: both;
+}
+
+/* SCENE */
+#scene-wrapper {
+    position: relative;
+}
+
+#scene {
+    background-color: #26292b;
+    width: 100%;
+}
+
+#scene-tooltip {
+    background: #f2f3c3;
+    box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.5);
+    color: #14171b;
+    display: none;
+    font-size: 12px;
+    font-weight: 400;
+    height: 25px;
+    left: 50%;
+    line-height: 25px;
+    margin: 15px auto;
+    padding: 0px 20px;
+    position: absolute;
+    top: 0px;
+    z-index: 10;
+}
+
+#scene-selection {
+    background: rgba(212, 216, 219, 0.1);
+    border: 1px dashed #d4d8db;
+    position: absolute;
+}
+
+#scene-camera {
+    color: #fff;
+    font-size: 12px;
+    left: 15px;
+    position: absolute;
+    top: 5px;
+}
+
+/* TOOLS */
+#params .tool {
+    background-image: url(/studio/static/mimics/assets/images/workshop-sprite.png);
+}
+
+#toolstop {
+    height: 30px;
+    width: 100%;
+}
+
+#toolstop .item {
+    background-image: url(/studio/static/mimics/assets/images/workshop-sprite.png);
+    float: left;
+    height: 24px;
+    margin-bottom: 10px;
+    margin-left: 10px;
+    width: 24px;
+}
+
+#tools .item.selected {
+    background-color: #61686e;
+    cursor: pointer;
+}
+
+#tools .item:hover {
+	background-color: #2653A7;
+	cursor: pointer;
+}
+
+#tools .item.disabled:hover {
+    background-color: transparent;
+    cursor: default;
+}
+
+#tools .separator {
+    background-color: #61686e;
+    height: 1px;
+    margin: 16px 0px 16px 8px;
+    width: 28px;
+}
+
+#tool-select {
+    background-position: -120px 0px;
+}
+
+#tool-select.disabled {
+    background-position: -270px 0px;
+}
+
+#tool-snap {
+    background-position: -150px 0px;
+}
+
+#tool-snap.disabled {
+    background-position: -300px 0px;
+}
+
+#tool-pivot {
+    background-position: -180px 0px;
+}
+
+#tool-pivot.disabled {
+    background-position: -330px 0px;
+}
+
+#tool-clone {
+    background-position: -210px 0px;
+}
+
+#tool-clone.disabled {
+    background-position: -360px 0px;
+}
+
+#tool-delete {
+    background-position: -240px 0px;
+}
+
+#tool-delete.disabled {
+    background-position: -390px 0px;
+}
+
+#tool-group {
+    background-position: -120px -30px;
+}
+
+#tool-group.disabled {
+    background-position: -270px -30px;
+}
+
+#tool-ungroup {
+    background-position: -150px -30px;
+}
+
+#tool-ungroup.disabled {
+    background-position: -300px -30px;
+}
+
+#tool-hide {
+    background-position: -180px -30px;
+}
+
+#tool-hide.disabled {
+    background-position: -330px -30px;
+}
+
+#tool-show {
+    background-position: -210px -30px;
+}
+
+/* PART LIBRARY */
+#library-wrapper {
+    height: 108px;
+}
+
+#library-top-bar {
+    background-color: #61686e;
+    color: #c3cdd4;
+    font-size: 12px;
+    font-weight: 400;
+    height: 26px;
+    line-height: 26px;
+    width: 100%;
+    overflow: hidden;
+}
+
+#library-top-bar .level {
+    float: left;
+    margin-left: 10px;
+}
+
+#library-top-bar .arrow {
+    background-position: -110px 0px;
+    float: left;
+    height: 9px;
+    margin: 9px 10px 0px 10px;
+    width: 6px;
+}
+
+#library-category-wrapper {
+    background-color: #d4d8db;
+    color: #3c3f41;
+    float: left;
+    height: 20px;
+    line-height: 20px;
+    margin-top: 3px;
+    padding-left: 10px;
+    position: relative;
+    width: 210px;
+}
+
+#library-category-wrapper::before {
+    background-image: url(/studio/static/mimics/assets/images/sprite-workshop@2x.png);
+    background-position: -120px 0px;
+    background-repeat: no-repeat;
+    background-size: 250px;
+    content: "";
+    display: inline-block;
+    float: right;
+    height: 20px;
+    width: 17px;
+}
+
+#library-category-wrapper .txt {
+    overflow: hidden;
+    text-decoration: none;
+    text-overflow: ellipsis;
+    width: 190px;
+    white-space: nowrap;
+}
+
+#library-category-wrapper select {
+    background-color: transparent;
+    border: 0;
+    border-radius: 0;
+    cursor: pointer;
+    height: 20px;
+    left: 0px;
+    opacity: 0;
+    filter: alpha(opacity=0);
+    position: absolute;
+    top: 0px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    width: 100%;
+}
+
+#library-colors {
+    float: left;
+}
+
+#library-extra {
+    float: left;
+}
+
+#library-part-name {
+	height: 26px;
+	overflow: hidden;
+    text-decoration: none;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#library-back-button {
+	background-color: #d4d8db;
+	background-position: -75px 0px;
+	cursor: pointer;
+	float: left;
+	height: 20px;
+	margin-left: 5px;
+	margin-top: 3px;
+	width: 26px;
+}
+
+#library-part-list-wrapper {
+    height: 79px;
+    padding-top: 1px;
+    width: 100%;
+}
+
+#library-part-list-wrapper .arrow {
+    background-color: #222529;
+    cursor: pointer;
+    height: 78px;
+    min-width: 20px;
+}
+
+#library-prev {
+    float: left;
+    margin-right: 1px;
+}
+
+#library-next {
+    float: right;
+}
+
+#library-part-list-wrapper .arrow .part {
+    height: 8px;
+    margin: 35px auto;
+    width: 6px;
+}
+
+#library-part-list-wrapper .arrow .part.disabled {
+    opacity: 0.2;
+	filter: alpha(opacity=20);
+}
+
+#library-prev .part {
+    background: url(/studio/static/mimics/assets/images/workshop-sprite.png) 0px -80px;
+}
+
+#library-next .part {
+    background: url(/studio/static/mimics/assets/images/workshop-sprite.png) -10px -80px;
+}
+
+#library-part-list {
+    float: left;
+    overflow: hidden;
+    height: 79px;
+}
+
+#library-part-list .no-overflow::after {
+    content: '';
+    display: block;
+    clear: both;
+}
+
+#library-part-list .item {
+    background-color: #222529;
+    cursor: pointer;
+    display: block;
+    float: left;
+    height: 77px;
+    margin-bottom: 1px;
+    margin-right: 1px;
+    position: relative;
+    padding-top: 2px;
+    width: 78px;
+}
+
+#library-part-list .item .part {
+    background-size: contain;
+    background-position: 50% 50%;
+    background-repeat: no-repeat;
+    height: 57px;
+    margin: 0px 1px 3px 3px;
+    width: 72px;
+    padding: 0px !important;
+}
+
+#library-part-list .item .folder-icon {
+	background-position: 0px 0px;
+	height: 57px;
+	margin: 0px 3px 3px 3px;
+	width: 72px;
+}
+
+#library-part-list .item .reference {
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 400;
+    height: 17px;
+    line-height: 17px;
+    overflow: hidden;
+    padding: 0px 5px;
+    text-align: center;
+    text-decoration: none;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#library-part-list .item .children {
+    background-position: -200px 0px;
+    background-color: #61686e;
+    border-bottom-left-radius: 2px;
+    height: 19px;
+    position: absolute;
+    right: 0px;
+    top: 0px;
+    width: 19px;
+}
+
+#library-part-list .item .children:hover {
+	background-color: #fe9900;
+}
+
+#library-part-list .item .loading {
+    background-color: rgba(34, 37, 41, 0.95);
+    display: none;
+    height: 78px;
+    left: 0px;
+    position:  absolute;
+    top: 0px;
+    width: 78px;
+}
+
+#library-part-list .item .spinner {
+    background-image: url(/studio/static/mimics/assets/images/workshop-lib-spinner.gif);
+    height: 19px;
+    margin: 29px;
+    width: 19px;
+}
+
+/* RIGHT */
+#mimicgroups_tab {
+    background-color: #14171b;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-font-smoothing: antialiased;
+    -ms-font-smoothing: antialiased;
+    -o-font-smoothing: antialiased;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -o-user-select: none;
+    user-select: none;
+    float: left;
+    padding: 0px 12px;
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+#mimicgroups_tab .title,
+#flex-tools {
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 400;
+    height: 32px;
+    line-height: 32px;
+}
+
+/* GROUPS */
+#groups-wrapper {
+    margin-bottom: 10px;
+    width: 100%;
+}
+
+#groups-main {
+    background: #26292b url(/studio/static/mimics/assets/images/workshop-scroll-bg.png);
+    background-size: 247px 1px;
+    width: 100%;
+}
+
+#groups-main .info {
+    height: 24px;
+}
+
+#groups-main .nano-content {
+    padding-right: 15px;
+}
+
+#groups-main .group {
+    margin-top: 8px;
+}
+
+#groups-main .toggle {
+    background: url(/studio/static/mimics/assets/images/workshop-sprite.png) 0px -80px;
+    cursor: pointer;
+    float: left;
+    height: 24px;
+    width: 24px;
+}
+
+#groups-main .toggle.opened {
+    background: url(/studio/static/mimics/assets/images/workshop-sprite.png) -30px -110px;
+}
+
+#groups-main .toggle.closed {
+    background: url(/studio/static/mimics/assets/images/workshop-sprite.png) 0px -110px;
+}
+
+#groups-main .frame {
+    background-color: rgba(97, 104, 110, 0.2);
+    border: 1px solid #61686e;
+    height: 22px;
+    line-height: 22px;
+    overflow: hidden;
+}
+
+#groups-main .frame:hover,
+#groups-main .frame.selected {
+    background-color: rgba(85, 138, 197, 0.2);
+    border-color: #558ac5;
+}
+
+#groups-main .lock {
+    background: #61686e url(/studio/static/mimics/assets/images/workshop-sprite.png) -60px -110px;
+    border-right: 1px solid #61686e;
+    cursor: pointer;
+    float: left;
+    height: 22px;
+    width: 22px;
+}
+
+#groups-main .lock.locked {
+    background: #61686e url(/studio/static/mimics/assets/images/workshop-sprite.png) -90px -110px;
+}
+
+#groups-main .frame:hover .lock,
+#groups-main .frame.selected .lock {
+    background-color: #558ac5;
+    border-right-color: #558ac5;
+}
+
+#groups-main .immovable {
+    background: #61686e url(/studio/static/mimics/assets/images/workshop-sprite.png) -0px -230px;
+    border-right: 1px solid #61686e;
+    cursor: pointer;
+    float: left;
+    height: 22px;
+    width: 22px;
+}
+
+#groups-main .immovable.locked {
+    background: #61686e url(/studio/static/mimics/assets/images/workshop-sprite.png) -30px -230px;
+}
+
+#groups-main .frame:hover .immovable,
+#groups-main .frame.selected .immovable {
+    background-color: #558ac5;
+    border-right-color: #558ac5;
+}
+
+#groups-main .unsnappable {
+    background: #61686e url(/studio/static/mimics/assets/images/workshop-sprite.png) -60px -230px;
+    border-right: 1px solid #61686e;
+    cursor: pointer;
+    float: left;
+    height: 22px;
+    width: 22px;
+}
+
+#groups-main .unsnappable.locked {
+    background: #61686e url(/studio/static/mimics/assets/images/workshop-sprite.png) -90px -230px;
+}
+
+#groups-main .frame:hover .unsnappable,
+#groups-main .frame.selected .unsnappable {
+    background-color: #558ac5;
+    border-right-color: #558ac5;
+}
+
+#groups-main .name {
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 0px 5px;
+    overflow: hidden;
+    text-decoration: none;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#groups-main .add {
+    background: url(/studio/static/mimics/assets/images/workshop-sprite.png) -120px -110px;
+    cursor: pointer;
+    float: right;
+    height: 14px;
+    margin-top: 4px;
+    width: 14px;
+}
+
+#groups-main .remove {
+    background: url(/studio/static/mimics/assets/images/workshop-sprite.png) -140px -110px;
+    cursor: pointer;
+    float: right;
+    height: 14px;
+    margin-right: 4px;
+    margin-top: 4px;
+    width: 14px;
+}
+
+#groups-main .add:hover,
+#groups-main .remove:hover {
+    background-color: #558ac5;
+}
+
+#groups-main .children {
+    margin-left: 24px;
+}
+
+#group-name {    
+    background: #e9eff4;
+    box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.2);
+    color: #6f767e;
+    left: 50%;
+    margin: 100px -250px 0px -250px;
+    padding: 40px 75px 55px 75px;
+    position: fixed;
+    width: 350px;
+    z-index: 1001;
+}
+
+#group-name .label {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    margin-top: 15px;
+    text-transform: uppercase;
+}
+
+#group-name input[type=text] {
+    background-color: #ffffff;
+    border: 2px solid #B5BFC8;
+    color: #7c858e;
+    font-family: /*'Open Sans',*/ sans-serif;
+    height: 51px;
+    font-size: 20px;
+    margin: 0px;
+    padding: 0px 10px 0px 10px;
+    width: 330px;
+}
+
+#group-name .button {
+    background-color: #676E75;
+    color: #fff;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    height: 52px;
+    line-height: 52px;
+    margin-top: 35px;
+    position: relative;
+    text-align: center;
+    text-transform: uppercase;
+    width: 350px;
+}
+
+#group-name .button:hover {
+     background-color: #fe9900;
+     transition: all 0.2s ease-out;
+     -webkit-transition: all 0.2s ease-out;
+     -moz-transition: all 0.2s ease-out;
+     -ms-transition: all 0.2s ease-out;
+     -o-transition: all 0.2s ease-out;
+}
+
+/* PROPERTIES */
+#properties-wrapper {
+    margin-bottom: 10px;
+    position: relative;
+    width: 100%;
+}
+
+#properties-wrapper .disabled {
+    background: rgba(38, 41, 43, 0.6);
+    display: none;
+    height: 100%;
+    left: 0px;
+    position: absolute;
+    top: 0px;
+    width: 100%;
+    z-index: 10;
+}
+
+#properties-main {
+    background: #26292b url(/studio/static/mimics/assets/images/workshop-scroll-bg.png);
+    background-size: 247px 1px;
+    width: 100%;
+}
+
+#properties-main .border {
+    padding: 10px 17px 2px 10px;
+}
+
+#properties-main .row {
+    color: #8c9195;
+    font-size: 12px;
+    height: 20px;
+    line-height: 20px;
+    margin-bottom: 8px;
+}
+
+#properties-main .row::after {
+    content: '';
+    display: block;
+    clear: both;
+}
+
+#properties-main .row .label {
+    float: left;
+    line-height: 20px;
+    width: 50px;
+}
+
+#properties-main .row .value {
+    color: #ffffff;
+    float: left;
+    line-height: 20px;
+    margin-left: 7px;
+    width: 163px;
+}
+
+#prop-name {
+    background-color: #14171b;
+    border: 0px;
+    color: #ffffff;
+    height: 20px;
+    font-size: 12px;
+    margin-left: 2px;
+    padding: 0px 5px;
+    width: 158px;
+}
+
+#prop-extra {
+    background-color: #14171b;
+    border: 0px;
+    color: #ffffff;
+    height: 20px;
+    font-size: 12px;
+    margin-left: 2px;
+    padding: 0px 5px;
+    width: 158px;
+}
+
+#properties-main span {
+    color: #ffffff;
+}
+
+#properties-main .color {
+    box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.3);
+    float: right;
+    height: 10px;
+    margin-top: 4px;
+    width: 10px;
+}
+
+#properties-main .separator {
+    background-color: #61686e;
+    height: 1px;
+    margin-bottom: 10px;
+    margin-top: 10px;
+}
+
+#properties-main .axis-label {
+    float: left;
+    line-height: 20px;
+    margin-left: 18px;
+    width: 16px;
+}
+
+#properties-main .axis-label:first-child {
+    margin-left: 0px;
+}
+
+#properties-main .axis-input {
+    background-color: #14171b;
+    border: 0px;
+    color: #ffffff;
+    height: 20px;
+    float: left;
+    font-size: 12px;
+    padding: 0px 5px;
+    text-align: center;
+    width: 35px;
+}
+
+#prop-quaternion .axis-label {
+    margin-left: 9px;
+}
+
+#prop-quaternion .axis-input {
+    width: 22px;
+}
+
+#prop-select-rotation {
+    background: #14171b url(/studio/static/mimics/assets/images/workshop-sprite.png) 0px -140px;
+    border: 0;
+    border-radius: 0;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 400;
+    height: 20px;
+    margin-left: 2px;
+    padding: 0px 5px;
+    vertical-align: middle;
+    width: 168px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+#prop-quaternion {
+    display: none;
+}
+
+/* COLORS */
+#colors-wrapper {
+    bottom: 12px;
+    height: 256px;
+    position: absolute;
+    width: 247px;
+}
+
+#colors {
+	background-color: #26292b;
+	background-image: url(/studio/static/mimics/assets/images/workshop-scroll-bg.png);
+	background-size: 247px 1px;
+    width: 100%;
+}
+
+#colors .nano-content {
+	margin: 7px 0px 7px 7px;
+}
+
+#library-colors {
+    margin: 0px 0px 0px 7px;
+}
+
+#library-colors .item-wrapper {
+    float: left;
+    height: 21px;
+    padding: 2px;
+    width: 21px;
+}
+
+#library-colors .item-none {
+    background: url(/studio/static/mimics/assets/images/workshop-sprite.png) -60px -200px;
+}
+
+#library-colors .item {
+    border: 3px solid #26292b;
+    cursor: pointer;
+    height: 15px;
+    width: 15px;
+}
+
+#library-colors .item.selected {
+    border-color: #ffc750;
+    -moz-box-shadow: inset 0 0 1px rgba(0, 0, 0, 0.6);
+    -webkit-box-shadow: inset 0 0 1px rgba(0, 0, 0, 0.6);
+    box-shadow: inset 0 0 1px rgba(0, 0, 0, 0.6);
+}
+
+#colors .item-wrapper {
+    float: left;
+    height: 21px;
+    padding: 2px;
+    width: 21px;
+}
+
+#colors .item {
+    border: 3px solid #26292b;
+    cursor: pointer;
+    height: 15px;
+    width: 15px;
+}
+
+#colors .item:hover,
+#colors .item.selected {
+    border-color: #ffc750;
+    -moz-box-shadow: inset 0 0 1px rgba(0, 0, 0, 0.6);
+    -webkit-box-shadow: inset 0 0 1px rgba(0, 0, 0, 0.6);
+    box-shadow: inset 0 0 1px rgba(0, 0, 0, 0.6);
+}
+
+/* POPUP */
+.new-popup {
+	background: #e9eff4;
+	border-radius: 2px;
+	box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.2);
+	left: 50%;
+	position: fixed;
+	z-index: 10002;
+}
+
+.new-popup .close {
+	background-color: #b0bbc7;
+	border-style: solid;
+	border-color: #e9eff4;
+	border-bottom-width: 5px;
+	border-left-width: 2px;
+	border-right-width: 2px;
+	border-top-width: 5px;
+	cursor: pointer;
+	height: 2px;
+	position: absolute;
+	right: 10px;
+	top: 10px;
+	width: 8px;
+}
+
+.new-popup .close:hover {
+    background-color: #828a93;
+}
+
+.new-popup .title-wrapper {
+	color: #6f767e;
+	font-size: 20px;
+	font-weight: 300;
+	height: 70px;
+	line-height: 70px;
+	text-align: center;
+	width: 100%;
+}
+
+.new-popup .button {
+	background-color: #828a93;
+	border-radius: 2px;
+	color: #fff;
+	cursor: pointer;
+	font-size: 13px;
+	font-weight: 600;
+	height: 28px;
+	line-height: 28px;
+	text-align: center;
+	text-transform: uppercase;
+	width: 100px;
+}
+
+.new-popup .button:hover {
+    background-color: #fe9900;
+}
+
+.new-popup .select-wrapper {
+    background-color: #fff;
+    border: 1px solid #b0bbc7;
+    border-radius: 2px;
+    float: left;
+    height: 26px;
+    position: relative;
+}
+
+.new-popup .select-wrapper .label {
+	color: #6f767e;
+	font-size: 13px;
+	line-height: 26px;
+	margin-left: 10px;
+	margin-right: 25px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.new-popup .select-wrapper .label::after {
+    background-image: url(/studio/static/mimics/assets/images/sprite-workshop@2x.png);
+    background-position: -140px 0px;
+    background-repeat: no-repeat;
+    background-size: 250px;
+    content: "";
+    display: inline-block;
+    height: 26px;
+    position: absolute;
+    right: 0px;
+    top: 0px;
+    width: 14px;
+}
+
+.new-popup .select-wrapper select {
+    background-color: transparent;
+    border: 0;
+    border-radius: 0;
+    cursor: pointer;
+    height: 26px;
+    left: 0px;
+    opacity: 0;
+    filter: alpha(opacity=0);
+    position: absolute;
+    top: 0px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    width: 100%;
+}
+
+.new-popup input[type=checkbox] {
+    display: none;
+}
+
+.new-popup input[type=checkbox] + label {
+	color: #6f767e;
+	cursor: pointer;
+    display: inline-block;
+    font-size: 13px;
+    line-height: 24px;
+    position: relative;
+}
+
+.new-popup input[type=checkbox] + label::before {
+    background: url(/studio/static/mimics/assets/images/sprite-workshop@2x.png) -160px 0px;
+    background-size: 250px;
+    content: "";
+    display: block;
+    float: left;
+    height: 18px;
+    margin-right: 10px;
+    margin-top: 3px;
+    width: 18px;
+}
+
+.new-popup input[type=checkbox]:checked + label:before {
+    background: url(/studio/static/mimics/assets/images/sprite-workshop@2x.png) -180px 0px;
+    background-size: 250px;
+    content: "";
+}

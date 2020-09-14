@@ -1,0 +1,694 @@
+/* Copyright 2019 Robot Mesh LLC.  Must not be used on root.html */
+
+/* Reset  */
+* { margin:0; padding:0; }
+html { font-size:16px; /* Fix for Opera */ }
+body          {	font:75%/150% Arial, Helvetica, sans-serif; background-color:#fff; color:#333; text-align:center; }
+
+img           { border:0; vertical-align:top; max-width:100%; }
+
+a             { color:#888; text-decoration:none; }
+a:hover       { text-decoration:none; color:#ca0413; }
+:focus        { outline:0; }
+
+/* Headings */
+h1,h2,h3,
+h4,h5,h6      { margin:0 0 10px; font-weight:normal; }
+h1            { font-size:2.6666em;	line-height:1.25em;		/*32px, 40px*/		margin-bottom:20px; }
+h2            { font-size:2em;		line-height:1.25em;		/*24px, 30px*/ }
+h3            { font-size:1.6666em;	line-height:1.2em;		/*20px, 24px*/ }
+h4            { font-size:1.3333em;	line-height:1.25em;		/*16px, 20px*/ }
+h5            { font-size:1.1666em;	line-height:1.1428em;	/*14px, 16px*/ }
+h6            { font-size:1em;		line-height:1.1666em;	/*12px, 14px*/ }
+
+/* Forms */
+form          { display:inline; }
+fieldset      { border:0; }
+legend        { display:none; }
+
+/* Table */
+table         { border:0; border-collapse:collapse; border-spacing:0; empty-cells:show; font-size:100%; }
+caption,th,td { vertical-align:top; text-align:left; font-weight:normal; }
+
+/* Content */
+strong        { font-weight:bold; }
+address       { font-style:normal; }
+cite          { font-style:normal; }
+q,
+blockquote    { quotes:none; }
+q:before,
+q:after       { content:''; }
+small,big     { font-size:1em; }
+sup           { font-size:1em; vertical-align:top; }
+
+/* Lists */
+ul,ol         { list-style:none; }
+
+/* Tools */
+.hidden       { display:block !important; border:0 !important; margin:0 !important; padding:0 !important; font-size:0 !important; line-height:0 !important; width:0 !important; height:0 !important; overflow:hidden !important; }
+.nobr         { white-space:nowrap !important; }
+.wrap         { white-space:normal !important; }
+.a-left       { text-align:left !important; }
+.a-center     { text-align:center !important; }
+.a-right      { text-align:right !important; }
+.v-top        { vertical-align:top; }
+.v-middle     { vertical-align:middle; }
+.f-left,
+.left         { float:left !important; }
+.f-right,
+.right        { float:right !important; }
+.f-none       { float:none !important; }
+.f-fix        { float:left; width:100%; min-height:147px; position:relative; }
+.no-display   { display:none; }
+.no-margin    { margin:0 !important; }
+.no-padding   { padding:0 !important; }
+.no-bg        { background:none !important; }
+
+/* Layout */
+.main-container { background-repeat:repeat; background-position:center top; }
+.main { padding:20px 0; min-height:370px; }
+
+/* Base Columns */
+.col-left { float:left; }
+.col-main { float:left; }
+.col-right { float:right; }
+
+/* 2 Columns Layout */
+.col2-left-layout .col-main { float:right; }
+
+/* Content Columns */
+.col2-set .col-1 { float:left; width:49%; }
+.col2-set .col-2 { float:right; width:49%; }
+.col2-set .col-narrow { width:33%; }
+.col2-set .col-wide { width:65%; }
+
+/* Form Elements */
+input, select, textarea, button {
+	font:12px/15px Arial, Helvetica, sans-serif;
+	vertical-align:middle;
+}
+/* Fix: remove default formatting on iOS (e.g. rounded corners) */
+input.input-text, textarea { -webkit-appearance:none; }
+input.input-text, select, textarea {
+	background:#fff;
+	border:1px solid #ddd;
+	color:#888;
+
+	/* Box model */
+	-webkit-box-sizing:	border-box;
+	-moz-box-sizing:	border-box;
+	box-sizing:			border-box;
+
+	/* Remove default formatting, fix for iOS (rounded corners and shadow) */
+	-webkit-border-radius:0px;
+	border-radius:0px;
+	-webkit-box-shadow:none;
+	box-shadow:none;
+}
+input.input-text{
+	height: 36px;
+}
+select {
+	height:36px;
+	padding:8px;
+	text-overflow:ellipsis;
+}
+select.multiselect {
+	height: auto;
+}
+input.input-text, textarea {
+	padding:8px;
+	text-overflow:ellipsis;
+}
+
+select option { padding-right:10px; padding-left:5px; }
+select.multiselect option { border-bottom:1px solid #eee; padding:2px 5px; }
+select.multiselect option:last-child { border-bottom:0; }
+textarea { overflow:auto; }
+input.radio { margin-right:3px; }
+input.checkbox { margin-right:3px; }
+input.qty { width:3em !important; text-align:center; }
+
+/* Active and others */
+input.input-text:hover, select:hover, textarea:hover, 
+input.input-text:focus, select:focus, textarea:focus { border-color:#aaa; color:#333; outline:none; }
+
+/* Buttons */
+button.button::-moz-focus-inner { padding:0; border:0; } /* FF Fix */
+button.button { 
+	-webkit-border-fit:lines; /* <- Safari & Google Chrome Fix */ 
+	overflow:visible; width:auto; border:0; padding:0; margin:0; background:transparent; cursor:pointer;
+}
+button.button span {
+	float:left;
+	display:block;
+	padding:0;
+	font-size:12px;
+	text-align:center; 
+	white-space:nowrap;
+	background-color:#ddd;
+	color:#333;
+	
+	transition:			color 300ms ease-in-out, background-color 300ms ease-in-out;
+	-moz-transition:	color 300ms ease-in-out, background-color 300ms ease-in-out;
+	-webkit-transition:	color 300ms ease-in-out, background-color 300ms ease-in-out;
+	-o-transition:		color 300ms ease-in-out, background-color 300ms ease-in-out;
+}
+button.button:hover span { background-color:#333; color:#fff; }
+button.button span span { padding:0 25px; height:45px; line-height:45px; }
+
+/* Smaller button - for inline display with input boxes */
+button.button.btn-inline span span { padding:0 10px; line-height:36px; height:36px; }
+
+/* Form */
+p.control input.checkbox,
+p.control input.radio { margin-right:6px; }
+
+/* Form lists */
+/* Grouped fields */
+.form-list li { margin:0 0 8px; }
+.form-list label { float:left; font-weight:bold; position:relative; z-index:0; margin:0 0 2px 0; }
+.form-list label.required em { float:right; font-style:normal; position:absolute; top:0; right:-8px; }
+.form-list li.control label { float:none; }
+.form-list li.control input.radio,
+.form-list li.control input.checkbox { margin-right:6px; }
+.form-list li.control .input-box { clear:none; display:inline; width:auto; }
+.form-list .input-box { display:block; clear:both; }
+.form-list .field { float:left; width:275px; margin-bottom:5px; }
+.form-list input.input-text { width:262px; /*244px;*/ }
+.form-list textarea { width:244px; height:10em; }
+.form-list select { width:262px; }
+.form-list li.additional-row { border-top:1px solid #e5e5e5; margin-top:10px; }
+.form-list li.additional-row .btn-remove { float:right; margin:5px 0 0; }
+.form-list .input-range input.input-text { width:74px; }
+/* Customer */
+.form-list .customer-name-prefix .input-box,
+.form-list .customer-name-suffix .input-box,
+.form-list .customer-name-prefix-suffix .input-box,
+.form-list .customer-name-prefix-middlename .input-box,
+.form-list .customer-name-middlename-suffix .input-box,
+.form-list .customer-name-prefix-middlename-suffix .input-box { width:auto; }
+
+.form-list .name-prefix { width:65px; }
+.form-list .name-prefix select { width:55px; }
+.form-list .name-prefix input.input-text { width:49px; }
+
+.form-list .name-suffix { width:65px; }
+.form-list .name-suffix select { width:55px; }
+.form-list .name-suffix input.input-text { width:49px; }
+
+.form-list .name-middlename { width:70px; }
+.form-list .name-middlename input.input-text { width:49px; }
+
+.form-list .customer-name-prefix-middlename-suffix .name-firstname,
+.form-list .customer-name-prefix-middlename .name-firstname { width:140px; }
+.form-list .customer-name-prefix-middlename-suffix .name-firstname input.input-text,
+.form-list .customer-name-prefix-middlename .name-firstname input.input-text { width:124px; }
+.form-list .customer-name-prefix-middlename-suffix .name-lastname { width:205px; }
+.form-list .customer-name-prefix-middlename-suffix .name-lastname input.input-text { width:189px; }
+
+.form-list .customer-name-prefix-suffix .name-firstname { width:210px; }
+.form-list .customer-name-prefix-suffix .name-lastname { width:205px; }
+.form-list .customer-name-prefix-suffix .name-firstname input.input-text,
+.form-list .customer-name-prefix-suffix .name-lastname input.input-text { width:189px; }
+
+.form-list .customer-name-prefix .name-firstname,
+.form-list .customer-name-middlename .name-firstname { width:210px; }
+
+.form-list .customer-name-suffix .name-lastname,
+.form-list .customer-name-middlename .name-firstname,
+.form-list .customer-name-middlename-suffix .name-firstname,
+.form-list .customer-name-middlename-suffix .name-lastname { width:205px; }
+
+.form-list .customer-name-prefix .name-firstname input.input-text,
+.form-list .customer-name-suffix .name-lastname input.input-text,
+.form-list .customer-name-middlename .name-firstname input.input-text,
+.form-list .customer-name-middlename-suffix .name-firstname input.input-text,
+.form-list .customer-name-middlename-suffix .name-lastname input.input-text { width:189px; }
+
+.form-list .customer-dob .dob-month,
+.form-list .customer-dob .dob-day,
+.form-list .customer-dob .dob-year { float:left; width:85px; }
+.form-list .customer-dob input.input-text { display:block; width:74px; }
+.form-list .customer-dob label { font-size:10px; font-weight:normal; }
+.form-list .customer-dob .dob-day,
+.form-list .customer-dob .dob-month { width:60px; }
+.form-list .customer-dob .dob-day input.input-text,
+.form-list .customer-dob .dob-month input.input-text { width:46px; }
+.form-list .customer-dob .dob-year { width:140px; }
+.form-list .customer-dob .dob-year input.input-text { width:134px; }
+
+/* Fieldset */
+/* Common styles for fieldsets and blocks in Multiple Addresses Checkout and Generic Info Set */
+.fieldset,
+.info-set {
+	margin:0 0 10px;
+	padding:0;
+}
+
+/* Buttons set */
+.buttons-set { clear:both; margin:10px 0; }
+.buttons-set button.button { float:right; margin-right:5px; margin-bottom:5px; }
+.buttons-set p.required { margin:0 5px 5px 0; }
+
+/* Form Validation */
+.validation-advice { clear:both; font-size:0.9166em; line-height:1em; color:#ee001c; margin-top:5px; }
+.validation-failed { border:1px solid #ee001c !important; background:#fff !important; }
+
+/* Required */
+p.required { font-size:0.8333em; /*10px*/ text-align:right; }
+p.required,
+.form-list label.required em { color:#ee001c; }
+
+/* Specific buttons set */
+
+/* Log in */
+.account-login .buttons-set button span span,
+/* Create account */
+.account-create .buttons-set button span span,
+/* Forgot password */
+.customer-account-forgotpassword .buttons-set button span span
+{
+	min-width: 120px;
+}
+
+/* Global Messages */
+.success { color:#3d6611; font-weight:bold; }
+.error { color:#ee001c; font-weight:bold; }
+.notice { color:#ccc; }
+
+.messages,
+.messages ul { list-style:none !important; margin:0; padding:0; }
+.messages { overflow:hidden; margin:0 0 10px; }
+.messages li { margin:0 0 1%; }
+.messages > li:last-child { margin-bottom:0; }
+.messages li li { margin:0; }
+.messages a { text-decoration:underline; }
+.catalog-category-view .messages { margin-top:15px; margin-bottom:15px; }
+
+.error-msg,
+.success-msg,
+.note-msg,
+.notice-msg { 
+	background-position:25px center !important;
+	background-repeat:no-repeat !important;
+	padding:25px 25px 25px 80px !important;
+	font-size:12px !important; 
+}
+.error-msg {
+	border-color:#c02230;
+	background-color:#F5DAD3;
+	background-image:url(/studio/static/skin/frontend/ultimo/default/images/i_msg-error.png);
+	color:#c02230;
+}
+.success-msg {
+	border-color:#296a23;
+	background-color:#e9ffca;
+	background-image:url(/studio/static/skin/frontend/ultimo/default/images/i_msg-success.png);
+	color:#296a23;
+}
+.note-msg,
+.notice-msg {
+	border-color:#7c622a;
+	background-color:#FDEDA4;
+	background-image:url(/studio/static/skin/frontend/ultimo/default/images/i_msg-note.png);
+	color:#7c622a;
+}
+
+/* Page Heading */
+.page-title h1,
+.page-title h2 { margin-bottom:0; }
+.page-title { margin-bottom:20px; }
+
+/* Links in page title */
+.page-title .separator { margin:0 3px; }
+.page-title .separator { font-weight:normal; display:inline-block; margin-top:10px; }
+
+/* Misc */
+.separator { margin:0 3px; font-weight:normal; color:#e5e5e5; }
+.divider { clear:both; display:block; font-size:0; line-height:0; height:1px; margin:10px 0; background:#e5e5e5; text-indent:-9999em; overflow:hidden; }
+
+/* Buttons remove/close and edit */
+
+/* Common styles for buttons */
+.btn-remove,
+.btn-remove2,
+.btn-edit,
+.tool-tip .btn-close a {
+	display:block;
+	width:17px; 
+	height:17px; 
+	font-size:0; 
+	line-height:0;
+	text-indent:-999em; 
+	overflow:hidden; 
+}
+
+.btn-remove,
+.btn-remove2,
+.tool-tip .btn-close a { 
+	background:url(/studio/static/skin/frontend/ultimo/default/images/img/pix.png) 0 -150px no-repeat;
+}
+.btn-remove:hover,
+.btn-remove2:hover,
+.tool-tip .btn-close a:hover { background-position: -17px -150px; }
+.btn-remove:active,
+.btn-remove2:active,
+.tool-tip .btn-close a:focus { background-position: -34px -150px; }
+
+/* Button edit */
+.btn-edit { background:url(/studio/static/skin/frontend/ultimo/default/images/img/pix.png) 0 -167px no-repeat; margin:0 5px 0 0; }
+.btn-edit:hover { background-position: -17px -167px; }
+.btn-edit:active { background-position: -34px -167px; }
+
+/* Lists */
+
+/* Unordered lists */
+/* Common basic styling */
+ul.bullet,
+ul.disc { margin:0 0 1em; padding:0; }
+
+/* Disc */
+ul.disc { list-style:disc outside none; padding-left:1.5em; }
+ul.disc li { background-image:none; padding-left:0; }
+
+/* Bullet */
+ul.bullet { list-style:none outside none; }
+ul.bullet li {
+	background:url(/studio/static/skin/frontend/ultimo/default/images/infortis/_shared/cck/list/bullet.png) 0 0 no-repeat;
+	padding-left:25px;
+	transition:			background-position 150ms ease-out;
+	-moz-transition:	background-position 150ms ease-out;
+	-webkit-transition:	background-position 150ms ease-out;
+	-o-transition:		background-position 150ms ease-out;
+}
+ul.bullet li:hover { background-position:3px 0; }
+
+/* Different bullets. IMPORTANT: use together with class "bullet" */
+ul.list1  li { background-image:url(/studio/static/skin/frontend/ultimo/default/images/infortis/_shared/cck/list/list1.png); }
+ul.list2  li { background-image:url(/studio/static/skin/frontend/ultimo/default/images/infortis/_shared/cck/list/list2.png); }
+ul.list11 li { background-image:url(/studio/static/skin/frontend/ultimo/default/images/infortis/_shared/cck/list/list11.png); }
+ul.list12 li { background-image:url(/studio/static/skin/frontend/ultimo/default/images/infortis/_shared/cck/list/list12.png); }
+ul.list13 li { background-image:url(/studio/static/skin/frontend/ultimo/default/images/infortis/_shared/cck/list/list13.png); }
+
+/* Separator */
+ul .separator {
+	border-bottom:1px solid #fff;
+	margin:8px 1px;
+	overflow:hidden;
+}
+
+/* Nested unordered lists
+-------------------------------------------------------------- */
+ul.bullet ul,
+ul.disc ul { margin-top:0.5em; margin-bottom:0.5em; }
+ul.bullet ul li,
+ul.disc ul li { background:url(/studio/static/skin/frontend/ultimo/default/images/infortis/_shared/cck/list/bullet-small.png) 0 0 no-repeat; padding-left:1.5em; }
+
+/* Header */
+.header { padding:0; }
+
+/* Misc header elements */
+.header .item-left { float:left; margin-right:20px; }
+.header .item-right { float:right; margin-left:20px; }
+
+/* Account Login/Create Pages */
+.account-login .new-users,
+.account-login .registered-users { margin-bottom:20px; }
+.account-login p { margin-bottom:20px; }
+.account-login p.required { margin:0; }
+.account-login .buttons-set { clear:none; padding:0; margin:0; }
+
+/* Account Login/Create box elements - login page and checkout page */
+.account-login .buttons-set button { float:left; margin-left:0; }
+.account-login .buttons-set a { float:right !important; margin:4px 0 0; }
+
+/* Remember Me Popup */
+.window-overlay { background:url(/studio/static/skin/frontend/ultimo/default/images/window_overlay.png) repeat; background:rgba(0, 0, 0, 0.35); position:absolute; top:0; left:0; width:100%; height:100%; z-index:9999; }
+
+.remember-me label { float:none; margin:0 6px; }
+.remember-me-popup { left:50%; top:50%; position:absolute; margin:-85px 0 0 -200px; width:400px; z-index:10000; }
+.remember-me-popup .remember-me-popup-head { position:relative; }
+.remember-me-popup .remember-me-popup-close-button { display:none; }
+
+/* Common styles for: Remember Me Popup and MAP Popup */
+.remember-me-popup { background:#fff; text-align:left; /* + Common shadow styles for multiple items */ }
+.remember-me-popup h3 { border-bottom:1px solid #e5e5e5; padding:12px 45px 12px 15px; }
+.remember-me-popup h3 { font-size:1.5em; /*18px*/ }
+.remember-me-popup .remember-me-popup-body { padding:15px; }
+.remember-me-popup .remember-me-popup-head .remember-me-popup-close { background:url(/studio/static/skin/frontend/ultimo/default/images/img/pix.png) 0 -150px no-repeat; display:block; position:absolute; top:11px; right:15px; height:17px; width:17px; text-indent:-9999em; }
+.remember-me-popup .remember-me-popup-head .remember-me-popup-close:hover { background-position:-17px -150px; }
+.remember-me-popup .remember-me-popup-head .remember-me-popup-close:active { background-position:-34px -150px; }
+
+/* Other */
+.calendar { z-index:200; }
+
+/* Clear */
+.clear { clear:both; font-size:0; line-height:0; height:0; } /* Additional simple clearing */
+.clearer:after,
+.header:after,
+.header .quick-access:after,
+.main:after,
+.col-main:after,
+.col2-set:after,
+.col3-set:after,
+.col4-set:after,
+.block .block-content:after,
+.block .actions:after,
+.block li.item:after,
+.page-title:after,
+.group-select li:after,
+.form-list li:after,
+.form-list .field:after,
+.buttons-set:after
+{ display:block; content:"."; clear:both; font-size:0; line-height:0; height:0; overflow:hidden; }
+
+/* Vertical links  */
+.links > li,
+.links > li > a { line-height:3em; } /* line-height:36px; */ /*2.6666em = 32px;*/
+.links > li > a { padding:0 0.5833em; } /* padding:0 7px; */
+.links > li.label { padding-right:0.5833em; } /* 7px */
+
+/* Basic links, no separators */
+.links > li { float:left; }
+.links > li > a { display:block; }
+
+/* Sizes */
+.header-top,
+.header .dropdown { line-height:3em; } /* line-height:36px; */
+.header .dropdown { max-height:3em; } /* Set static height to improve layout of inline elements */
+
+/* Headings */
+
+/* Block titles and section headings */
+/* Sidebar blocks */
+.block .block-title,
+
+/* Secondary headings */
+/* Log in */
+.account-login h2,
+
+/* Fieldset and multiple checkout */
+.fieldset .legend,
+.info-set h2.legend
+{
+	font-size:1.5em; /*18px*/
+	line-height:1.3333em; /*24px*/
+	font-weight:normal;
+	text-transform:uppercase;
+	border-bottom:1px solid #e5e5e5;
+	padding-bottom:10px;
+}
+
+/* Pop-ups */
+.remember-me-popup h3
+{
+	border-color:#f5f5f5;
+}
+
+/* Shadows */
+/* Pop-ups and tooltips */
+.remember-me-popup,
+.tool-tip
+{
+	-moz-box-shadow:0 2px 10px rgba(0,0,0, 0.15);
+	-webkit-box-shadow:0 2px 10px rgba(0,0,0, 0.15);
+	box-shadow:0 2px 10px rgba(0,0,0, 0.15);
+}
+
+/* Links and other selected elements */
+/* IMPORTANT: link transitions should be placed before other transitions */
+a
+{
+	transition:			color 450ms ease-in-out, background-color 450ms ease-in-out;
+	-moz-transition:	color 450ms ease-in-out, background-color 450ms ease-in-out;
+	-webkit-transition:	color 450ms ease-in-out, background-color 450ms ease-in-out;
+	-o-transition:		color 450ms ease-in-out, background-color 450ms ease-in-out;
+}
+a:hover
+{
+	transition-duration:			100ms;
+	-moz-transition-duration:		100ms;
+	-webkit-transition-duration:	100ms;
+	-o-transition-duration:			100ms;
+}
+
+input.input-text, select, textarea
+{
+	transition:			color 300ms ease-in-out, background-color 300ms ease-in-out, border-color 300ms ease-in-out;
+	-moz-transition:	color 300ms ease-in-out, background-color 300ms ease-in-out, border-color 300ms ease-in-out;
+	-webkit-transition:	color 300ms ease-in-out, background-color 300ms ease-in-out, border-color 300ms ease-in-out;
+	-o-transition:		color 300ms ease-in-out, background-color 300ms ease-in-out, border-color 300ms ease-in-out;
+}
+
+body {
+    color: #333333;
+    font-size: 12px;
+    background-color: #ffffff;
+}
+
+a
+{
+    color: #777777;
+}
+
+a:hover
+{
+    color: #29abe2;
+}
+
+button.button span
+{
+    background-color: #dddddd;
+    color: #333333;
+}
+
+button.button:hover span
+{
+    background-color: #29abe2;
+    color: #333333;
+}
+
+button.btn-checkout span
+{
+    background-color: #333333;
+    color: #ffffff;
+}
+
+button.btn-checkout:hover span
+{
+    background-color: #29abe2;
+    color: #333333;
+}
+
+span.icon
+{
+    background-color: #d52462;
+}
+
+span.icon-hover:hover
+{
+    background-color: #29abe2;
+}
+
+.links > li > a:hover {
+    background-color: #333333;
+    color: #ffffff !important;
+}
+
+/* Custom content class */
+.main-font,
+h1, h2, h3, h4, h5,
+.block .block-title,
+.caption .heading
+{
+    font-family: "PT Sans", georgia, serif;
+}
+
+.wrapper
+{
+    border-top-color: #ffffff;
+}
+
+.header
+{
+    color: #000000;
+}
+
+li.level0 > a:hover > span > .pin-bottom:before
+{
+    border-top-color: #ff7214;
+}
+
+.main
+{
+    background-color: #ffffff;
+}
+
+/* Layout  */
+.wrapper { border-top-style:solid; border-top-width:5px; }
+.main { padding:30px 0 40px; }
+
+/* Additional margin for main sidebars */
+.col-left > * { margin-right: 15px; }
+.col-right > * { margin-left: 15px; }
+
+/* Form */
+/* Fieldset */
+/* Common styles for fieldsets and blocks in Multiple Addresses Checkout and Generic Info Set */
+.fieldset,
+.info-set {
+    margin:0 0 10px;
+    padding:0 15px 15px;
+}
+.fieldset .legend,
+.info-set h2.legend {
+	margin:0 -15px 10px -15px;
+	padding-left:15px; padding-right:15px;
+}
+
+/* Buttons set */
+.buttons-set { margin:10px 15px; }
+/* Note: buttons and "required" have equal right margin */
+.buttons-set button.button { margin-left:0; margin-right:5px; margin-bottom:5px; }
+.buttons-set p.required { margin:0 5px 5px 0; }
+
+/* Page Heading */
+.page-title h1,
+.page-title h2 { margin:0; min-height:1.3125em; /* 42px. Has to ba aligned with ".block .block-title" */ }
+
+/* 12-column grid system */
+
+/* Container */
+.container {
+	margin-left:auto;
+	margin-right:auto;
+}
+
+/* Grid units */
+.grid12-1,
+.grid12-2,
+.grid12-3,
+.grid12-4,
+.grid12-5,
+.grid12-6,
+.grid12-7,
+.grid12-8,
+.grid12-9,
+.grid12-10,
+.grid12-11,
+.grid12-12,
+.grid-full /* Alias for full-width unit */
+{ 
+	/*position:relative;*/
+	display:inline;
+	float:left;
+	margin-left:1%;
+	margin-right:1%;
+}
+
+/* Basic grid units width */
+.grid-full { width:98%; }
+
+/* Grid container */
+.container { width:96%; }
